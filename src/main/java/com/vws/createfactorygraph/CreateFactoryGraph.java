@@ -46,15 +46,16 @@ public class CreateFactoryGraph {
     }
 
     private void commonSetup(FMLCommonSetupEvent event) {
-        LOGGER.info("{} phase-2 factory graph loaded (Create 6.0.10 mixins active)", MOD_ID);
+        LOGGER.info("{} phase-4 factory graph loaded (Create 6.0.10 mixins active; ship cadence API v{})", MOD_ID, com.vws.createfactorygraph.api.FactoryCadence.API_VERSION);
     }
 
     private void onServerStarting(ServerStartingEvent event) {
-        LOGGER.info("{} ready; graph mode {}", MOD_ID, FGConfig.enabled() ? "ENABLED" : "disabled");
+        LOGGER.info("{} ready; graph mode {}; ship cadence {} (locator={}, policy={})", MOD_ID, FGConfig.enabled() ? "ENABLED" : "disabled", FGConfig.shipCadence() ? "on" : "off", com.vws.createfactorygraph.api.FactoryCadence.hasLocator(), FGConfig.cheapPolicy());
     }
 
     private void onServerStopping(ServerStoppingEvent event) {
         FactoryGraphManager.clearAll();
+        com.vws.createfactorygraph.api.FactoryCadence.reset();
     }
 
     private void onRegisterCommands(RegisterCommandsEvent event) {

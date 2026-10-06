@@ -5,6 +5,12 @@ import java.util.Comparator;
 import java.util.List;
 
 import com.mojang.brigadier.CommandDispatcher;
+import com.mojang.brigadier.arguments.IntegerArgumentType;
+import com.mojang.brigadier.arguments.StringArgumentType;
+import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
+import com.vws.createfactorygraph.api.FactoryCadence;
+import com.vws.createfactorygraph.cadence.CadenceDuck;
+import com.vws.createfactorygraph.cadence.ShipGate;
 import com.mojang.brigadier.context.CommandContext;
 import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
 import com.vws.createfactorygraph.FGConfig;
@@ -34,6 +40,25 @@ public final class FactoryGraphCommand {
                 .then(Commands.literal("rebuild").executes(FactoryGraphCommand::rebuild))
                 .then(Commands.literal("inspect")
                         .then(Commands.argument("pos", BlockPosArgument.blockPos()).executes(FactoryGraphCommand::inspect)))
+                .then(Commands.literal("cadence")
+                        .executes(FactoryGraphCommand::cadence)
+                        .then(Commands.literal("on").executes(c -> { FGConfig.runtimeShipCadence = true; return say(c, "ship cadence ON"); }))
+                        .then(Commands.literal("off").executes(c -> { FGConfig.runtimeShipCadence = false; return say(c, "ship cadence OFF (parented BEs repay debt and tick normally)"); }))
+                        .then(Commands.literal("policy")
+                                .then(Commands.argument("policy", StringArgumentType.word()).executes(FactoryGraphCommand::policy)))
+                        .then(Commands.literal("parent")
+                                .then(Commands.argument("pos", BlockPosArgument.blockPos())
+                                        .then(Commands.argument("key", StringArgumentType.string()).executes(FactoryGraphCommand::parent))))
+                        .then(Commands.literal("unparent")
+                                .then(Commands.argument("pos", BlockPosArgument.blockPos()).executes(FactoryGraphCommand::unparent)))
+                        .then(Commands.literal("set")
+                                .then(Commands.argument("key", StringArgumentType.string())
+                                        .then(Commands.argument("mode", StringArgumentType.word())
+                                                .executes(c -> setMode(c, -1))
+                                                .then(Commands.argument("period", IntegerArgumentType.integer(1, 40))
+                                                        .executes(c -> setMode(c, IntegerArgumentType.getInteger(c, "period")))))))
+                        .then(Commands.literal("inspect")
+                                .then(Commands.argument("pos", BlockPosArgument.blockPos()).executes(FactoryGraphCommand::cadenceInspect))))
                 .then(Commands.literal("profile")
                         .then(Commands.literal("start").executes(c -> {
                             KineticTickProfiler.reset();
@@ -119,6 +144,89 @@ public final class FactoryGraphCommand {
             }
         }
         return 1;
+    }
+
+    static Object parseKey(String k) {
+        try { return java.util.UUID.fromString(k); } catch (Exception e) { return k; }
+    }
+
+    private static int cadence(CommandContext<CommandSourceStack> c) {
+        say(c, String.format("cadence: %s policy=%s catchUp/tick=%d maxDebt=%d locator=%s | events=%d (cheap=%d rebuilding=%d full=%d)",
+                FGConfig.shipCadence() ? "ON" : "OFF", FGConfig.cheapPolicy(), FGConfig.catchUpTicksPerTick(), FGConfig.maxDebtTicks(),
+                FactoryCadence.hasLocator(), FactoryCadence.eventsReceived, FactoryCadence.cheapEvents,
+                FactoryCadence.rebuildingEvents, FactoryCadence.fullEvents));
+        int ground = 0, groundBEs = 0;
+        java.util.Map<Object, int[]> per = new java.util.HashMap<>();
+        for (FactoryGraphManager m : FactoryGraphManager.all()) {
+            for (FactoryGraph g : m.graphs.values()) {
+                if (g.shipKey == null) { ground++; groundBEs += g.nodes.size(); }
+                else { int[] a = per.computeIfAbsent(g.shipKey, k -> new int[2]); a[0]++; a[1] += g.parentedBEs; }
+            }
+            say(c, String.format(" [%s] parentedRebuilds=%d groundRebuilds=%d", m.level.dimension().location(), m.parentedRebuilds, m.groundRebuilds));
+        }
+        say(c, " ground graphs=" + ground + " nodes=" + groundBEs + " (never gated)");
+        for (ShipGate gt : FactoryCadence.gates()) {
+            int[] a = per.getOrDefault(gt.key, new int[2]);
+            gt.graphs = a[0];
+            gt.attached = a[1];
+            say(c, " " + gt);
+        }
+        for (String e : FactoryCadence.recentEvents()) say(c, "  event " + e);
+        return 1;
+    }
+
+    private static int policy(CommandContext<CommandSourceStack> c) {
+        try {
+            FGConfig.runtimePolicy = FGConfig.CheapPolicy.valueOf(StringArgumentType.getString(c, "policy").toUpperCase());
+        } catch (Exception e) {
+            c.getSource().sendFailure(Component.literal("policy must be slow|sleep|burst"));
+            return 0;
+        }
+        return say(c, "cheap policy " + FGConfig.runtimePolicy);
+    }
+
+    private static Long networkAt(CommandContext<CommandSourceStack> c) throws com.mojang.brigadier.exceptions.CommandSyntaxException {
+        BlockPos pos = BlockPosArgument.getLoadedBlockPos(c, "pos");
+        if (c.getSource().getLevel().getBlockEntity(pos) instanceof KineticBlockEntity be && be.network != null) return be.network;
+        c.getSource().sendFailure(Component.literal("no kinetic network at " + pos.toShortString()));
+        return null;
+    }
+
+    private static int parent(CommandContext<CommandSourceStack> c) throws com.mojang.brigadier.exceptions.CommandSyntaxException {
+        Long net = networkAt(c);
+        if (net == null) return 0;
+        Object key = parseKey(StringArgumentType.getString(c, "key"));
+        FactoryGraphManager m = FactoryGraphManager.get(c.getSource().getLevel());
+        m.forcedParents.put(net.longValue(), key);
+        m.markDirty(net);
+        return say(c, "synthetic parent: network " + net + " -> ship " + key + " (applied on next graph rebuild)");
+    }
+
+    private static int unparent(CommandContext<CommandSourceStack> c) throws com.mojang.brigadier.exceptions.CommandSyntaxException {
+        Long net = networkAt(c);
+        if (net == null) return 0;
+        FactoryGraphManager m = FactoryGraphManager.get(c.getSource().getLevel());
+        m.forcedParents.remove(net.longValue());
+        m.markDirty(net);
+        return say(c, "network " + net + " unparented");
+    }
+
+    private static int setMode(CommandContext<CommandSourceStack> c, int period) {
+        Object key = parseKey(StringArgumentType.getString(c, "key"));
+        FactoryCadence.Mode mode;
+        try { mode = FactoryCadence.Mode.valueOf(StringArgumentType.getString(c, "mode").toUpperCase()); }
+        catch (Exception e) { c.getSource().sendFailure(Component.literal("mode must be FULL|CHEAP|REBUILDING")); return 0; }
+        FactoryCadence.setShipMode(key, mode, period, -1);
+        return say(c, "synthetic cadence event: " + key + " -> " + mode);
+    }
+
+    private static int cadenceInspect(CommandContext<CommandSourceStack> c) throws com.mojang.brigadier.exceptions.CommandSyntaxException {
+        BlockPos pos = BlockPosArgument.getLoadedBlockPos(c, "pos");
+        if (!(c.getSource().getLevel().getBlockEntity(pos) instanceof SmartBlockEntity be)) return say(c, "no Create smart BE at " + pos.toShortString());
+        CadenceDuck d = (CadenceDuck) be;
+        ShipGate g = d.cfg$gate();
+        Object located = FactoryCadence.locateShip(c.getSource().getLevel(), pos.asLong());
+        return say(c, pos.toShortString() + " gate=" + (g == null ? "none (ground)" : g.key + " " + g.mode) + " debt=" + d.cfg$debt() + " locator=" + located);
     }
 
     private FactoryGraphCommand() {}
