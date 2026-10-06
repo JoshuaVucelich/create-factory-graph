@@ -7,7 +7,7 @@ modId="${mod_id}"
 version="${mod_version}"
 displayName="${mod_name}"
 authors="${mod_authors}"
-description='''Server-side Create kinetic factory graph: event-driven network graphs, dormant decorative relays, jammed-belt backoff. Pinned to Create 6.0.10.'''
+description='''Server-side Create kinetic factory graph: event-driven network graphs, dormant decorative relays, jammed-belt backoff. Compatible with Create 6.0.5–6.0.10 (mixin targets stable).'''
 # Server-side only: vanilla/Create clients without this mod can join.
 displayTest="IGNORE_ALL_VERSION"
 
@@ -28,10 +28,10 @@ config="${mod_id}.mixins.json"
     ordering="NONE"
     side="BOTH"
 
-# Mixins target Create 6.0.10 internals exactly.
+# Mixins verified identical on Create 6.0.5–6.0.10 private fields/methods.
 [[dependencies.${mod_id}]]
     modId="create"
     type="required"
-    versionRange="[6.0.10,6.0.11)"
+    versionRange="[6.0.5,6.0.11)"
     ordering="AFTER"
     side="BOTH"
