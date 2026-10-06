@@ -17,7 +17,8 @@ public final class ShipGate {
     public long ranTicks;        // BE ticks actually run (normal + catch-up) for parented BEs
     public long catchUpTicks;    // extra ticks run to repay debt
     public long forfeitedTicks;  // debt dropped because it exceeded the cap (never items)
-    public long cheapSince = -1;
+    /** Game time the gate first saw CHEAP (set lazily by the tick gate; -1 = not CHEAP). */
+    public volatile long cheapSince = -1;
     public int attached;         // parented BEs at last graph rebuild (approx)
     public int graphs;           // parented graphs at last rebuild (approx)
 
@@ -28,6 +29,7 @@ public final class ShipGate {
     public void update(FactoryCadence.Mode m, int periodTicks, int phaseTick) {
         if (periodTicks > 0) period = periodTicks;
         if (phaseTick >= 0) phase = phaseTick;
+        if (m != mode) cheapSince = -1;
         mode = m;
     }
 

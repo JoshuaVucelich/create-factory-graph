@@ -29,7 +29,7 @@ public final class ShipCadenceGate {
         ShipGate gate = duck.cfg$gate();
         boolean active = FGConfig.enabled() && FGConfig.shipCadence();
         int debt = duck.cfg$debt();
-        if (active && gate.mode == FactoryCadence.Mode.CHEAP) {
+        if (active && gate.mode == FactoryCadence.Mode.CHEAP && settled(level, gate)) {
             FGConfig.CheapPolicy policy = FGConfig.cheapPolicy();
             int cap = FGConfig.maxDebtTicks();
             if (policy == FGConfig.CheapPolicy.SLEEP) {
@@ -60,6 +60,16 @@ public final class ShipCadenceGate {
         }
         gate.ranTicks++;
         return false;
+    }
+
+    private static boolean settled(Level level, ShipGate gate) {
+        long t = level.getGameTime();
+        long since = gate.cheapSince;
+        if (since < 0) {
+            gate.cheapSince = t;
+            since = t;
+        }
+        return t - since >= FGConfig.cheapSettleTicks();
     }
 
     private static void defer(ShipGate gate, CadenceDuck duck, int debt, int cap) {

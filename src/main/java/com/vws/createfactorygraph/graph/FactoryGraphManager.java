@@ -8,6 +8,10 @@ import java.util.Map;
 import com.simibubi.create.content.kinetics.KineticNetwork;
 import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
 import com.simibubi.create.content.kinetics.belt.transport.BeltInventory;
+import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
+import com.vws.createfactorygraph.api.FactoryCadence;
+import com.vws.createfactorygraph.cadence.CadenceDuck;
+import com.vws.createfactorygraph.cadence.ShipGate;
 import com.simibubi.create.infrastructure.config.AllConfigs;
 import com.vws.createfactorygraph.CreateFactoryGraph;
 import com.vws.createfactorygraph.FGConfig;
@@ -25,6 +29,7 @@ import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.SectionPos;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.chunk.LevelChunk;
 
 /**
@@ -69,6 +74,9 @@ public final class FactoryGraphManager {
     public long sleeps, wakes, rebuilds, skippedBeTicks, validations, rebounds;
     public long beltBackoffSkips, beltJamEvents, beltResumes;
     public long advanceTicks;
+    public long parentedRebuilds, groundRebuilds;
+    /** Test hook (/factorygraph cadence parent): network id -> synthetic ship key. */
+    public final Long2ObjectOpenHashMap<Object> forcedParents = new Long2ObjectOpenHashMap<>();
 
     private FactoryGraphManager(ServerLevel level) {
         this.level = level;
@@ -164,6 +172,7 @@ public final class FactoryGraphManager {
                 try {
                     g.rebuild(level, net);
                     rebuilds++;
+                    applyParent(g, net);
                 } catch (Throwable t) {
                     CreateFactoryGraph.LOGGER.warn("factory graph rebuild failed for network {}", id, t);
                     graphs.remove(id);
@@ -173,6 +182,47 @@ public final class FactoryGraphManager {
 
         // 4. prune jam set occasionally
         if ((tickCounter & 255) == 0) jammedBelts.removeIf(inv -> ((BeltInventoryAccessor) inv).cfg$getBelt().isRemoved());
+    }
+
+    /**
+     * Phase 4 parenting: ask the ship mod (via FactoryCadence locator) whether this network sits on a
+     * ship. All members of one Create network are rotationally connected, so they share a plot;
+     * we sample a few members and require agreement. Ground graphs clear any stale gate and never
+     * subscribe to anything.
+     */
+    private void applyParent(FactoryGraph g, KineticNetwork net) {
+        Object ship = forcedParents.get(g.networkId);
+        if (ship == null && FactoryCadence.hasLocator() && FGConfig.shipCadence()) {
+            int sampled = 0;
+            for (KineticBlockEntity be : net.members.keySet()) {
+                Object s = FactoryCadence.locateShip(level, be.getBlockPos().asLong());
+                if (sampled == 0) ship = s;
+                else if (s == null ? ship != null : !s.equals(ship)) { ship = null; break; }
+                if (++sampled >= 4) break;
+            }
+        }
+        ShipGate gate = ship == null ? null : FactoryCadence.gateFor(ship);
+        g.shipKey = ship;
+        int n = 0;
+        for (KineticBlockEntity be : net.members.keySet()) {
+            if (be.isRemoved() || be.getLevel() != level) continue;
+            setGate(be, gate);
+            n++;
+        }
+        for (GraphNode node : g.nodes.values()) {
+            if (node.kind != NodeKind.LOGISTICS || !level.isLoaded(node.pos)) continue;
+            BlockEntity t = level.getBlockEntity(node.pos);
+            if (t instanceof SmartBlockEntity sbe) { setGate(sbe, gate); n++; }
+        }
+        g.parentedBEs = gate == null ? 0 : n;
+        if (gate != null) parentedRebuilds++; else groundRebuilds++;
+    }
+
+    private static void setGate(SmartBlockEntity be, ShipGate gate) {
+        CadenceDuck d = (CadenceDuck) be;
+        if (d.cfg$gate() == gate) return;
+        if (gate == null) d.cfg$setDebt(0);
+        d.cfg$setGate(gate);
     }
 
     private void sleep(KineticBlockEntity be) {
@@ -275,5 +325,6 @@ public final class FactoryGraphManager {
         graphs.clear();
         dirty.clear();
         jammedBelts.clear();
+        forcedParents.clear();
     }
 }

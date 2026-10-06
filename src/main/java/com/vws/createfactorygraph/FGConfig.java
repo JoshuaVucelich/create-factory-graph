@@ -16,6 +16,19 @@ public final class FGConfig {
     public static final ModConfigSpec.IntValue MAX_BACKOFF_TICKS;
     public static final ModConfigSpec.IntValue MAX_REBUILDS_PER_TICK;
     public static final ModConfigSpec.IntValue MAX_EDGE_NODES;
+    public static final ModConfigSpec.BooleanValue SHIP_CADENCE;
+    public static final ModConfigSpec.EnumValue<CheapPolicy> CHEAP_POLICY;
+    public static final ModConfigSpec.IntValue DEFAULT_HULL_PERIOD;
+    public static final ModConfigSpec.IntValue CATCH_UP_PER_TICK;
+    public static final ModConfigSpec.IntValue MAX_DEBT_TICKS;
+    public static final ModConfigSpec.IntValue CHEAP_SETTLE_TICKS;
+
+    /** What a ship-parented factory does while its ship is CHEAP. */
+    public enum CheapPolicy { SLOW, SLEEP, BURST }
+
+    /** Runtime overrides from /factorygraph cadence ... (null = use config). */
+    public static volatile CheapPolicy runtimePolicy = null;
+    public static volatile Boolean runtimeShipCadence = null;
 
     /** Runtime override from /factorygraph enable|disable (null = use config). */
     public static volatile Boolean runtimeEnabled = null;
@@ -50,6 +63,21 @@ public final class FGConfig {
         MAX_BACKOFF_TICKS = b.comment("Max ticks between inventory ticks while jammed (= worst-case resume latency once the jam clears).")
                 .defineInRange("maxBackoffTicks", 8, 1, 100);
         b.pop();
+
+        b.push("ship_cadence");
+        SHIP_CADENCE = b.comment("Phase 4: factory graphs on an Aeronautics ship follow the ship's hull cadence (needs aeronautics_ship_hull; ground factories are never affected).")
+                .define("enabled", true);
+        CHEAP_POLICY = b.comment("While the ship is CHEAP: SLOW = tick once per hull period and defer the rest; SLEEP = defer every tick; BURST = run the whole period back-to-back on the hull step (no saving, batching only). Deferred ticks are replayed after the ship wakes.")
+                .defineEnum("cheapPolicy", CheapPolicy.SLOW);
+        DEFAULT_HULL_PERIOD = b.comment("Hull period (ticks) used if the ship mod does not report one.")
+                .defineInRange("defaultHullPeriod", 2, 1, 40);
+        CATCH_UP_PER_TICK = b.comment("Max deferred ticks a block entity replays per server tick once its ship is awake (FULL/REBUILDING).")
+                .defineInRange("catchUpTicksPerTick", 2, 1, 64);
+        MAX_DEBT_TICKS = b.comment("Max deferred ticks remembered per block entity; beyond this the work is forfeited (items are never touched).")
+                .defineInRange("maxDebtTicks", 6000, 0, 72000);
+        CHEAP_SETTLE_TICKS = b.comment("Ship must stay CHEAP this many ticks before its factories slow (debounces mode flaps).")
+                .defineInRange("cheapSettleTicks", 20, 0, 1200);
+        b.pop();
         SPEC = b.build();
     }
 
@@ -72,6 +100,19 @@ public final class FGConfig {
     public static int maxBackoffTicks() { return get(MAX_BACKOFF_TICKS, 8); }
     public static int maxRebuildsPerTick() { return get(MAX_REBUILDS_PER_TICK, 16); }
     public static int maxEdgeNodes() { return get(MAX_EDGE_NODES, 10000); }
+
+    public static boolean shipCadence() {
+        Boolean rt = runtimeShipCadence;
+        return rt != null ? rt : get(SHIP_CADENCE, true);
+    }
+    public static CheapPolicy cheapPolicy() {
+        CheapPolicy rt = runtimePolicy;
+        return rt != null ? rt : get(CHEAP_POLICY, CheapPolicy.SLOW);
+    }
+    public static int defaultHullPeriod() { return get(DEFAULT_HULL_PERIOD, 2); }
+    public static int catchUpTicksPerTick() { return get(CATCH_UP_PER_TICK, 2); }
+    public static int maxDebtTicks() { return get(MAX_DEBT_TICKS, 6000); }
+    public static int cheapSettleTicks() { return get(CHEAP_SETTLE_TICKS, 20); }
 
     private FGConfig() {}
 }

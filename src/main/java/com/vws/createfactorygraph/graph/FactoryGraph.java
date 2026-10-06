@@ -41,6 +41,9 @@ public final class FactoryGraph {
     public long buildNanos;
     public int buildCount;
     public boolean edgesSkipped;
+    /** Phase 4: ship this graph is parented to (null = ground). */
+    public Object shipKey;
+    public int parentedBEs;
 
     public FactoryGraph(long networkId) {
         this.networkId = networkId;
