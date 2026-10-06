@@ -1,0 +1,28 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "com.vws.createfactorygraph.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": [
+    "BeltInventoryMixin",
+    "KineticBlockEntityMixin",
+    "KineticBlockMixin",
+    "KineticEffectHandlerMixin",
+    "KineticNetworkMixin",
+    "LevelChunkMixin",
+    "SmartBlockEntityMixin",
+    "SmartBlockEntityTickerMixin",
+    "accessor.BeltBlockEntityAccessor",
+    "accessor.BeltInventoryAccessor",
+    "accessor.KineticBlockEntityAccessor",
+    "accessor.KineticEffectHandlerAccessor",
+    "accessor.KineticNetworkAccessor",
+    "accessor.LevelChunkInvoker",
+    "accessor.RotationPropagatorInvoker",
+    "accessor.SmartBlockEntityAccessor",
+    "accessor.TorquePropagatorAccessor"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
