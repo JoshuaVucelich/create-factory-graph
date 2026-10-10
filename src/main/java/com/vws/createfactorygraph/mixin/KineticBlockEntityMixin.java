@@ -9,6 +9,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
 import com.vws.createfactorygraph.hooks.FactoryGraphHooks;
 import com.vws.createfactorygraph.hooks.KineticNodeDuck;
+import com.vws.createfactorygraph.kinetics.StressCache;
 
 /**
  * Hooks Create 6.0.10's KineticBlockEntity tick + every kinetic state mutation.
@@ -44,11 +45,26 @@ public abstract class KineticBlockEntityMixin implements KineticNodeDuck {
     @Inject(method = "onSpeedChanged", at = @At("TAIL"))
     private void cfg$onSpeedChanged(float prev, CallbackInfo ci) { FactoryGraphHooks.touch(cfg$self()); }
 
+    @Inject(method = "setSpeed", at = @At("HEAD"))
+    private void cfg$setSpeedHead(float s, CallbackInfo ci) { StressCache.beforeSpeed(cfg$self()); }
+
     @Inject(method = "setSpeed", at = @At("TAIL"))
-    private void cfg$setSpeed(float s, CallbackInfo ci) { FactoryGraphHooks.touch(cfg$self()); }
+    private void cfg$setSpeed(float s, CallbackInfo ci) {
+        StressCache.afterSpeed(cfg$self());
+        FactoryGraphHooks.touch(cfg$self());
+    }
+
+    @Inject(method = "clearKineticInformation", at = @At("HEAD"))
+    private void cfg$clearHead(CallbackInfo ci) { StressCache.invalidateBE(cfg$self()); }
 
     @Inject(method = "clearKineticInformation", at = @At("TAIL"))
     private void cfg$clear(CallbackInfo ci) { FactoryGraphHooks.touch(cfg$self()); }
+
+    @Inject(method = "validateKinetics", at = @At("HEAD"))
+    private void cfg$validateHead(CallbackInfo ci) { StressCache.beforeSpeed(cfg$self()); }
+
+    @Inject(method = "validateKinetics", at = @At("RETURN"))
+    private void cfg$validateTail(CallbackInfo ci) { StressCache.afterSpeed(cfg$self()); }
 
     @Inject(method = "warnOfMovement", at = @At("TAIL"))
     private void cfg$moved(CallbackInfo ci) { FactoryGraphHooks.touch(cfg$self()); }

@@ -20,6 +20,14 @@ One jar covers Create 6.0.5 through 6.0.10. The dependency range is `[6.0.5,6.0.
 
 No chunk loading. Lookups use `getChunkNow` and Create's loaded checks.
 
+## Kinetic neighbour and stress caches
+
+`caches.neighbours` remembers `RotationPropagator.getConnectedNeighbours` until a block state changes or a neighbour is removed. The cached list is a copy. `caches.stress` keeps the stress and capacity totals Create last computed, then applies the same `impact * abs(speed)` delta `calculateStress` and `calculateCapacity` use. Removing a member drops the total, because Create zeros speed before `remove`. Chunk unload drops every total. Client threads run the original methods.
+
+Measured on 24 networks of 16 cogwheels while creative motors went from 32 to 96 RPM (792 neighbour calls, 72 stress calls). Neighbour scans went from 5.018 ms to 3.243 ms (6335 ns/call to 4094 ns/call, 384 hits). Stress went from 0.200 ms to 0.151 ms (2771 ns/call to 2093 ns/call, 24 hits). The following settled window, 408 neighbour calls, went from 1568 ns/call to 333 ns/call with every call hitting. Capacity bits were 1237319680 on both sides (16384 × 96). Stress was 0.0 on both sides because cogwheels and shafts have no stress impact in this Create version. A full rescan matched the cached total.
+
+Issue: `docs/issues/003-kinetics.md`.
+
 ## Commands
 
 Op level 2.
@@ -53,6 +61,7 @@ Op level 2.
 - `dormancy.dormantRelays`, `dormantBeltSegments`, `settleTicks` (40), `dormantValidation`
 - `belts.jamBackoff`, `jamDetectTicks` (40), `maxBackoffTicks` (8)
 - `ship_cadence.enabled`, `cheapPolicy` (`SLOW`), `defaultHullPeriod` (2), `catchUpTicksPerTick` (2), `maxDebtTicks` (6000), `cheapSettleTicks` (20)
+- ``caches.neighbours` (true), `caches.stress` (true)`
 
 ## Server only
 
@@ -73,7 +82,7 @@ Java 21.
 ./gradlew build
 ```
 
-Jar: `build/libs/create_factory_graph-1.0.0.jar`
+Jar: `build/libs/create_factory_graph-1.1.0-perf-kinetics.jar`
 
 ## Pins
 

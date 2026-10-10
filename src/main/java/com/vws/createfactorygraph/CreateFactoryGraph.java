@@ -5,6 +5,7 @@ import org.slf4j.Logger;
 import com.mojang.logging.LogUtils;
 import com.vws.createfactorygraph.command.FactoryGraphCommand;
 import com.vws.createfactorygraph.graph.FactoryGraphManager;
+import com.vws.createfactorygraph.kinetics.StressCache;
 import com.vws.createfactorygraph.profile.KineticTickProfiler;
 
 import net.minecraft.server.level.ServerLevel;
@@ -15,6 +16,7 @@ import net.neoforged.fml.config.ModConfig;
 import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
+import net.neoforged.neoforge.event.level.ChunkEvent;
 import net.neoforged.neoforge.event.level.LevelEvent;
 import net.neoforged.neoforge.event.server.ServerStartingEvent;
 import net.neoforged.neoforge.event.server.ServerStoppingEvent;
@@ -43,6 +45,7 @@ public class CreateFactoryGraph {
         NeoForge.EVENT_BUS.addListener(this::onServerTickPre);
         NeoForge.EVENT_BUS.addListener(this::onServerTickPost);
         NeoForge.EVENT_BUS.addListener(this::onLevelUnload);
+        NeoForge.EVENT_BUS.addListener(this::onChunkUnload);
     }
 
     private void commonSetup(FMLCommonSetupEvent event) {
@@ -74,6 +77,10 @@ public class CreateFactoryGraph {
 
     private void onServerTickPost(ServerTickEvent.Post event) {
         KineticTickProfiler.serverTickEnd();
+    }
+
+    private void onChunkUnload(ChunkEvent.Unload event) {
+        if (!event.getLevel().isClientSide()) StressCache.invalidateAll();
     }
 
     private void onLevelUnload(LevelEvent.Unload event) {

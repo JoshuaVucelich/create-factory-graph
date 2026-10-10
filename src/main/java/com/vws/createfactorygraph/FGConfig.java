@@ -23,6 +23,9 @@ public final class FGConfig {
     public static final ModConfigSpec.IntValue MAX_DEBT_TICKS;
     public static final ModConfigSpec.IntValue CHEAP_SETTLE_TICKS;
 
+    public static final ModConfigSpec.BooleanValue NEIGHBOUR_CACHE;
+    public static final ModConfigSpec.BooleanValue STRESS_CACHE;
+
     /** What a ship-parented factory does while its ship is CHEAP. */
     public enum CheapPolicy { SLOW, SLEEP, BURST }
 
@@ -32,6 +35,9 @@ public final class FGConfig {
 
     /** Runtime override from /factorygraph enable|disable (null = use config). */
     public static volatile Boolean runtimeEnabled = null;
+
+    public static volatile Boolean runtimeNeighbourCache = null;
+    public static volatile Boolean runtimeStressCache = null;
 
     static {
         ModConfigSpec.Builder b = new ModConfigSpec.Builder();
@@ -78,6 +84,12 @@ public final class FGConfig {
         CHEAP_SETTLE_TICKS = b.comment("Ship must stay CHEAP this many ticks before its factories slow (debounces mode flaps).")
                 .defineInRange("cheapSettleTicks", 20, 0, 1200);
         b.pop();
+        b.push("caches");
+        NEIGHBOUR_CACHE = b.comment("Remember kinetic neighbour lists between block changes. The list is copied; Create's own list is left alone.")
+                .define("neighbours", true);
+        STRESS_CACHE = b.comment("Keep network stress and capacity incrementally. A cold network still runs Create's full scan, and chunk unload drops the totals.")
+                .define("stress", true);
+        b.pop();
         SPEC = b.build();
     }
 
@@ -113,6 +125,14 @@ public final class FGConfig {
     public static int catchUpTicksPerTick() { return get(CATCH_UP_PER_TICK, 2); }
     public static int maxDebtTicks() { return get(MAX_DEBT_TICKS, 6000); }
     public static int cheapSettleTicks() { return get(CHEAP_SETTLE_TICKS, 20); }
+
+
+    private static boolean flag(Boolean runtime, ModConfigSpec.BooleanValue value, boolean def) {
+        return runtime != null ? runtime : get(value, def);
+    }
+
+    public static boolean neighbourCache() { return flag(runtimeNeighbourCache, NEIGHBOUR_CACHE, true); }
+    public static boolean stressCache() { return flag(runtimeStressCache, STRESS_CACHE, true); }
 
     private FGConfig() {}
 }
