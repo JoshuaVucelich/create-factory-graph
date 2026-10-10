@@ -7,7 +7,7 @@ modId="${mod_id}"
 version="${mod_version}"
 displayName="${mod_name}"
 authors="${mod_authors}"
-description='''Server-side Create kinetic factory graph: event-driven network graphs, dormant decorative relays, jammed-belt backoff. Compatible with Create 6.0.5–6.0.10 (mixin targets stable).'''
+description='''Server-side Create kinetic factory graph: event-driven network graphs, dormant decorative relays, jammed-belt backoff. Compatible with Create 6.0.5–6.0.10 (mixin targets stable). This build remembers mechanical-crafter recipe searches and not-ready chain walks.'''
 # Server-side only: vanilla/Create clients without this mod can join.
 displayTest="IGNORE_ALL_VERSION"
 

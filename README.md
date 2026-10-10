@@ -20,6 +20,16 @@ One jar covers Create 6.0.5 through 6.0.10. The dependency range is `[6.0.5,6.0.
 
 No chunk loading. Lookups use `getChunkNow` and Create's loaded checks.
 
+## Mechanical crafter recipes
+
+`caches.recipe` stores the item `RecipeGridHandler.tryToApplyRecipe` returned for an identical grouped grid, including the `allowRegularCraftingInCrafter` config bit. A hit returns a copy of that stack. Null and empty stay distinct. The map clears when `RecipeManager` applies a new recipe set. Client threads call the original search.
+
+200 searches of two oak planks, after 40 untimed searches: 40.215 ms with the cache off, then 0.627 ms with it on (200/200 hits), then 26.157 ms with it off again. Every result was `minecraft:stick x4`.
+
+A chain-walk skip for a not-ready 3-crafter line was slower than the walk (warm off 1.292 ms, cache on 2.507 ms, 200 calls, inventory unchanged) and is not in this build. Deployer `shouldActivate` caching was 608 ns/call off and 931 ns/call on and is not in this build either.
+
+Issue: `docs/issues/004-machines.md`.
+
 ## Commands
 
 Op level 2.
@@ -53,6 +63,7 @@ Op level 2.
 - `dormancy.dormantRelays`, `dormantBeltSegments`, `settleTicks` (40), `dormantValidation`
 - `belts.jamBackoff`, `jamDetectTicks` (40), `maxBackoffTicks` (8)
 - `ship_cadence.enabled`, `cheapPolicy` (`SLOW`), `defaultHullPeriod` (2), `catchUpTicksPerTick` (2), `maxDebtTicks` (6000), `cheapSettleTicks` (20)
+- `caches.recipe` (true)
 
 ## Server only
 
@@ -73,7 +84,7 @@ Java 21.
 ./gradlew build
 ```
 
-Jar: `build/libs/create_factory_graph-1.0.0.jar`
+Jar: `build/libs/create_factory_graph-1.1.0-perf-machines.jar`
 
 ## Pins
 
