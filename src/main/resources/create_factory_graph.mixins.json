@@ -12,6 +12,7 @@
     "LevelChunkMixin",
     "SmartBlockEntityMixin",
     "SmartBlockEntityTickerMixin",
+    "TravellingPointMixin",
     "accessor.BeltBlockEntityAccessor",
     "accessor.BeltInventoryAccessor",
     "accessor.KineticBlockEntityAccessor",

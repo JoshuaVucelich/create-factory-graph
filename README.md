@@ -20,6 +20,14 @@ One jar covers Create 6.0.5 through 6.0.10. The dependency range is `[6.0.5,6.0.
 
 No chunk loading. Lookups use `getChunkNow` and Create's loaded checks.
 
+## Train point positions
+
+`caches.trainPosition` reuses the `Vec3` from `TravellingPoint.getPositionWithOffset` while the edge, graph, position bits, offset bits, and flip are unchanged. Signal scouting still travels every tick, and carriage collision still runs at speed 0. Those paths re-establish reservations and contacts. Client threads call the original method.
+
+On one straight 32-block andesite edge, 64 points, measured back to back after a warmup: 30 passes over the points went from 0.224 ms to 0.179 ms, and asking each point 30 times in a row went from 0.174 ms to 0.107 ms. Both cached loops hit 1984/1984, and the position bits matched (`6220146625772257280`).
+
+Issue: `docs/issues/005-trains.md`.
+
 ## Commands
 
 Op level 2.
@@ -53,6 +61,7 @@ Op level 2.
 - `dormancy.dormantRelays`, `dormantBeltSegments`, `settleTicks` (40), `dormantValidation`
 - `belts.jamBackoff`, `jamDetectTicks` (40), `maxBackoffTicks` (8)
 - `ship_cadence.enabled`, `cheapPolicy` (`SLOW`), `defaultHullPeriod` (2), `catchUpTicksPerTick` (2), `maxDebtTicks` (6000), `cheapSettleTicks` (20)
+- `caches.trainPosition` (true)
 
 ## Server only
 
@@ -73,7 +82,7 @@ Java 21.
 ./gradlew build
 ```
 
-Jar: `build/libs/create_factory_graph-1.0.0.jar`
+Jar: `build/libs/create_factory_graph-1.1.0-perf-trains.jar`
 
 ## Pins
 
