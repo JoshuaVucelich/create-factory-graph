@@ -12,6 +12,8 @@
     "LevelChunkMixin",
     "SmartBlockEntityMixin",
     "SmartBlockEntityTickerMixin",
+    "AbstractContraptionEntityMixin",
+    "ContraptionColliderMixin",
     "accessor.BeltBlockEntityAccessor",
     "accessor.BeltInventoryAccessor",
     "accessor.KineticBlockEntityAccessor",

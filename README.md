@@ -20,6 +20,14 @@ One jar covers Create 6.0.5 through 6.0.10. The dependency range is `[6.0.5,6.0.
 
 No chunk loading. Lookups use `getChunkNow` and Create's loaded checks.
 
+## Contraption collision shapes
+
+`caches.contraptionShapes` replays the boxes `ContraptionCollider.getPotentiallyCollidedShapes` recorded for the same contraption, the same quantized scan range, and the same block count, until a block changes or `AbstractContraptionEntity.setBlock` runs. The scan range is Create's own inflate (0.5, then the horizontal and vertical factor). A miss still walks the shapes and feeds the original consumer. Carriage contraptions that override `isHiddenInPortal` stay uncached. Actor ticks are unchanged. Client threads run the original scan.
+
+The bench assembled a bearing contraption of one andesite casing (`assemble` returned true, 1 block) and ran `collideEntities` (121 calls, 0.035 ms/tick with the cache off). `getPotentiallyCollidedShapes` was not entered, so the shape cache recorded 0 hits and 0 misses. The later drop in collide time is a different window, not this cache.
+
+Issue: `docs/issues/006-contraptions.md`.
+
 ## Commands
 
 Op level 2.
@@ -53,6 +61,7 @@ Op level 2.
 - `dormancy.dormantRelays`, `dormantBeltSegments`, `settleTicks` (40), `dormantValidation`
 - `belts.jamBackoff`, `jamDetectTicks` (40), `maxBackoffTicks` (8)
 - `ship_cadence.enabled`, `cheapPolicy` (`SLOW`), `defaultHullPeriod` (2), `catchUpTicksPerTick` (2), `maxDebtTicks` (6000), `cheapSettleTicks` (20)
+- ``caches.contraptionShapes` (true)`
 
 ## Server only
 
@@ -73,7 +82,7 @@ Java 21.
 ./gradlew build
 ```
 
-Jar: `build/libs/create_factory_graph-1.0.0.jar`
+Jar: `build/libs/create_factory_graph-1.1.0-perf-contraptions.jar`
 
 ## Pins
 
