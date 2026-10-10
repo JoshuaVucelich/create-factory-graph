@@ -20,6 +20,12 @@ One jar covers Create 6.0.5 through 6.0.10. The dependency range is `[6.0.5,6.0.
 
 No chunk loading. Lookups use `getChunkNow` and Create's loaded checks.
 
+## Belt segment lookups
+
+Item transport still uses the jam backoff already in this mod. A separate cache of segments with no funnel, tunnel, crusher, or processor was measured and left out. On one 24-block belt with 6 cobblestone, positions reset so both 200-tick windows saw the same motion, the inventory tick went from 7456 ns/call (0.015 ms/tick) to 11451 ns/call (0.023 ms/tick). 2534 of 2763 segment checks hit, and the bookkeeping still cost more than the block-state reads. Item positions and side offsets matched bit for bit (`beltPosition` and `sideOffset` float bits, item, and count).
+
+Issue: `docs/issues/001-belts.md`.
+
 ## Commands
 
 Op level 2.
@@ -73,7 +79,7 @@ Java 21.
 ./gradlew build
 ```
 
-Jar: `build/libs/create_factory_graph-1.0.0.jar`
+Jar: `build/libs/create_factory_graph-1.1.0-perf-belts.jar`
 
 ## Pins
 
