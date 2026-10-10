@@ -23,6 +23,8 @@ public final class FGConfig {
     public static final ModConfigSpec.IntValue MAX_DEBT_TICKS;
     public static final ModConfigSpec.IntValue CHEAP_SETTLE_TICKS;
 
+    public static final ModConfigSpec.BooleanValue LOGISTICS_CACHE;
+
     /** What a ship-parented factory does while its ship is CHEAP. */
     public enum CheapPolicy { SLOW, SLEEP, BURST }
 
@@ -32,6 +34,8 @@ public final class FGConfig {
 
     /** Runtime override from /factorygraph enable|disable (null = use config). */
     public static volatile Boolean runtimeEnabled = null;
+
+    public static volatile Boolean runtimeLogisticsCache = null;
 
     static {
         ModConfigSpec.Builder b = new ModConfigSpec.Builder();
@@ -78,6 +82,10 @@ public final class FGConfig {
         CHEAP_SETTLE_TICKS = b.comment("Ship must stay CHEAP this many ticks before its factories slow (debounces mode flaps).")
                 .defineInRange("cheapSettleTicks", 20, 0, 1200);
         b.pop();
+        b.push("caches");
+        LOGISTICS_CACHE = b.comment("Remember funnel belt-segment lookups, depot behaviour lookups, and chute insert checks until a block changes. Chute results also key off the sign of item motion. Entity search stays on Create's 5-tick cadence.")
+                .define("logistics", true);
+        b.pop();
         SPEC = b.build();
     }
 
@@ -113,6 +121,13 @@ public final class FGConfig {
     public static int catchUpTicksPerTick() { return get(CATCH_UP_PER_TICK, 2); }
     public static int maxDebtTicks() { return get(MAX_DEBT_TICKS, 6000); }
     public static int cheapSettleTicks() { return get(CHEAP_SETTLE_TICKS, 20); }
+
+
+    private static boolean flag(Boolean runtime, ModConfigSpec.BooleanValue value, boolean def) {
+        return runtime != null ? runtime : get(value, def);
+    }
+
+    public static boolean logisticsCache() { return flag(runtimeLogisticsCache, LOGISTICS_CACHE, true); }
 
     private FGConfig() {}
 }

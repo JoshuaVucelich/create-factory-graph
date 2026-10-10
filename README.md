@@ -20,6 +20,14 @@ One jar covers Create 6.0.5 through 6.0.10. The dependency range is `[6.0.5,6.0.
 
 No chunk loading. Lookups use `getChunkNow` and Create's loaded checks.
 
+## Funnel, depot, and chute lookups
+
+`caches.logistics` reuses three lookups Create repeats every tick. Retracted belt funnels reuse `BeltHelper.getSegmentBE`. Depots reuse the behaviour above them, and skip `handleBeltFunnelOutput` when the block above is already known not to be a funnel. Chutes reuse `canDirectlyInsert` while the world epoch and the sign of item motion stay the same. A block-state change drops the maps. Chute entity search still runs on Create's 5-tick cadence. Client levels call Create's own methods.
+
+On a settled world (32 chutes, 32 depots holding iron, 32 retracted belt funnels) a 100-tick window went from 459 ns to 390 ns per funnel tick, 189 ns to 165 ns per depot tick, and 354 ns to 277 ns per chute tick. 12416 of 12928 lookups hit. Depot iron stayed put. The machine snapshot (12 cobblestone targets, one cobblestone and two empty crafter slots) matched.
+
+Issue: `docs/issues/002-logistics.md`.
+
 ## Commands
 
 Op level 2.
@@ -53,6 +61,7 @@ Op level 2.
 - `dormancy.dormantRelays`, `dormantBeltSegments`, `settleTicks` (40), `dormantValidation`
 - `belts.jamBackoff`, `jamDetectTicks` (40), `maxBackoffTicks` (8)
 - `ship_cadence.enabled`, `cheapPolicy` (`SLOW`), `defaultHullPeriod` (2), `catchUpTicksPerTick` (2), `maxDebtTicks` (6000), `cheapSettleTicks` (20)
+- ``caches.logistics` (true)`
 
 ## Server only
 
@@ -73,7 +82,7 @@ Java 21.
 ./gradlew build
 ```
 
-Jar: `build/libs/create_factory_graph-1.0.0.jar`
+Jar: `build/libs/create_factory_graph-1.1.0-perf-logistics.jar`
 
 ## Pins
 
