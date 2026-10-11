@@ -45,6 +45,13 @@ Issue: `docs/issues/002-logistics.md`.
 A chain-walk skip for a not-ready 3-crafter line was slower than the walk (warm off 1.292 ms, cache on 2.507 ms, 200 calls, inventory unchanged) and is not in this build. Deployer `shouldActivate` caching was 608 ns/call off and 931 ns/call on and is not in this build either.
 
 Issue: `docs/issues/004-machines.md`.
+## Train point positions
+
+`caches.trainPosition` reuses the `Vec3` from `TravellingPoint.getPositionWithOffset` while the edge, graph, position bits, offset bits, and flip are unchanged. Signal scouting still travels every tick, and carriage collision still runs at speed 0. Those paths re-establish reservations and contacts. Client threads call the original method.
+
+On one straight 32-block andesite edge, 64 points, measured back to back after a warmup: 30 passes over the points went from 0.224 ms to 0.179 ms, and asking each point 30 times in a row went from 0.174 ms to 0.107 ms. Both cached loops hit 1984/1984, and the position bits matched (`6220146625772257280`).
+
+Issue: `docs/issues/005-trains.md`.
 
 ## Commands
 
@@ -82,6 +89,7 @@ Op level 2.
 - `caches.neighbours` (true), `caches.stress` (true)
 - `caches.logistics` (true)
 - `caches.recipe` (true)
+- `caches.trainPosition` (true)
 
 ## Server only
 

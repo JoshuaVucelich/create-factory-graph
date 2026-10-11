@@ -27,6 +27,7 @@ public final class FGConfig {
     public static final ModConfigSpec.BooleanValue STRESS_CACHE;
     public static final ModConfigSpec.BooleanValue LOGISTICS_CACHE;
     public static final ModConfigSpec.BooleanValue RECIPE_CACHE;
+    public static final ModConfigSpec.BooleanValue TRAIN_POSITION_CACHE;
 
     /** What a ship-parented factory does while its ship is CHEAP. */
     public enum CheapPolicy { SLOW, SLEEP, BURST }
@@ -42,6 +43,7 @@ public final class FGConfig {
     public static volatile Boolean runtimeStressCache = null;
     public static volatile Boolean runtimeLogisticsCache = null;
     public static volatile Boolean runtimeRecipeCache = null;
+    public static volatile Boolean runtimeTrainPositionCache = null;
 
     static {
         ModConfigSpec.Builder b = new ModConfigSpec.Builder();
@@ -97,6 +99,8 @@ public final class FGConfig {
                 .define("logistics", true);
         RECIPE_CACHE = b.comment("Remember mechanical-crafter recipe searches for an identical grid. Cleared when the recipe manager reloads. The stored stack is a copy.")
                 .define("recipe", true);
+        TRAIN_POSITION_CACHE = b.comment("Reuse TravellingPoint.getPositionWithOffset while the edge, graph, position, offset, and flip are unchanged. Signal scouting and collision still run.")
+                .define("trainPosition", true);
         b.pop();
         SPEC = b.build();
     }
@@ -143,6 +147,7 @@ public final class FGConfig {
     public static boolean stressCache() { return flag(runtimeStressCache, STRESS_CACHE, true); }
     public static boolean logisticsCache() { return flag(runtimeLogisticsCache, LOGISTICS_CACHE, true); }
     public static boolean recipeCache() { return flag(runtimeRecipeCache, RECIPE_CACHE, true); }
+    public static boolean trainPositionCache() { return flag(runtimeTrainPositionCache, TRAIN_POSITION_CACHE, true); }
 
     private FGConfig() {}
 }

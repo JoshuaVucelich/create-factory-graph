@@ -18,6 +18,7 @@
     "RotationPropagatorMixin",
     "RecipeGridHandlerMixin",
     "RecipeManagerMixin",
+    "TravellingPointMixin",
     "accessor.BeltBlockEntityAccessor",
     "accessor.BeltInventoryAccessor",
     "accessor.KineticBlockEntityAccessor",
