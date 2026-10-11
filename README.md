@@ -52,6 +52,13 @@ Issue: `docs/issues/004-machines.md`.
 On one straight 32-block andesite edge, 64 points, measured back to back after a warmup: 30 passes over the points went from 0.224 ms to 0.179 ms, and asking each point 30 times in a row went from 0.174 ms to 0.107 ms. Both cached loops hit 1984/1984, and the position bits matched (`6220146625772257280`).
 
 Issue: `docs/issues/005-trains.md`.
+## Contraption collision shapes
+
+`caches.contraptionShapes` replays the boxes `ContraptionCollider.getPotentiallyCollidedShapes` recorded for the same contraption, the same quantized scan range, and the same block count, until a block changes or `AbstractContraptionEntity.setBlock` runs. The scan range is Create's own inflate (0.5, then the horizontal and vertical factor). A miss still walks the shapes and feeds the original consumer. Carriage contraptions that override `isHiddenInPortal` stay uncached. Actor ticks are unchanged. Client threads run the original scan.
+
+The bench assembled a bearing contraption of one andesite casing (`assemble` returned true, 1 block) and ran `collideEntities` (121 calls, 0.035 ms/tick with the cache off). `getPotentiallyCollidedShapes` was not entered, so the shape cache recorded 0 hits and 0 misses. The later drop in collide time is a different window, not this cache.
+
+Issue: `docs/issues/006-contraptions.md`.
 
 ## Commands
 
@@ -90,6 +97,7 @@ Op level 2.
 - `caches.logistics` (true)
 - `caches.recipe` (true)
 - `caches.trainPosition` (true)
+- ``caches.contraptionShapes` (true)`
 
 ## Server only
 

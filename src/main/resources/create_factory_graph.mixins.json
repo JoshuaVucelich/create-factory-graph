@@ -19,6 +19,8 @@
     "RecipeGridHandlerMixin",
     "RecipeManagerMixin",
     "TravellingPointMixin",
+    "AbstractContraptionEntityMixin",
+    "ContraptionColliderMixin",
     "accessor.BeltBlockEntityAccessor",
     "accessor.BeltInventoryAccessor",
     "accessor.KineticBlockEntityAccessor",

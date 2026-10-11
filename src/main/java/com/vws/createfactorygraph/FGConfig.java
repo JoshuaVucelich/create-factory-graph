@@ -28,6 +28,7 @@ public final class FGConfig {
     public static final ModConfigSpec.BooleanValue LOGISTICS_CACHE;
     public static final ModConfigSpec.BooleanValue RECIPE_CACHE;
     public static final ModConfigSpec.BooleanValue TRAIN_POSITION_CACHE;
+    public static final ModConfigSpec.BooleanValue CONTRAPTION_SHAPE_CACHE;
 
     /** What a ship-parented factory does while its ship is CHEAP. */
     public enum CheapPolicy { SLOW, SLEEP, BURST }
@@ -44,6 +45,7 @@ public final class FGConfig {
     public static volatile Boolean runtimeLogisticsCache = null;
     public static volatile Boolean runtimeRecipeCache = null;
     public static volatile Boolean runtimeTrainPositionCache = null;
+    public static volatile Boolean runtimeContraptionShapeCache = null;
 
     static {
         ModConfigSpec.Builder b = new ModConfigSpec.Builder();
@@ -101,6 +103,8 @@ public final class FGConfig {
                 .define("recipe", true);
         TRAIN_POSITION_CACHE = b.comment("Reuse TravellingPoint.getPositionWithOffset while the edge, graph, position, offset, and flip are unchanged. Signal scouting and collision still run.")
                 .define("trainPosition", true);
+        CONTRAPTION_SHAPE_CACHE = b.comment("Replay contraption block collision shapes for an unchanged local scan. Carriage contraptions that override portal hiding stay uncached. Actor ticks are unchanged.")
+                .define("contraptionShapes", true);
         b.pop();
         SPEC = b.build();
     }
@@ -148,6 +152,7 @@ public final class FGConfig {
     public static boolean logisticsCache() { return flag(runtimeLogisticsCache, LOGISTICS_CACHE, true); }
     public static boolean recipeCache() { return flag(runtimeRecipeCache, RECIPE_CACHE, true); }
     public static boolean trainPositionCache() { return flag(runtimeTrainPositionCache, TRAIN_POSITION_CACHE, true); }
+    public static boolean contraptionShapeCache() { return flag(runtimeContraptionShapeCache, CONTRAPTION_SHAPE_CACHE, true); }
 
     private FGConfig() {}
 }
