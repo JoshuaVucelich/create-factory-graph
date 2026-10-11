@@ -7,6 +7,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import com.simibubi.create.content.kinetics.crafter.RecipeGridHandler;
 import com.vws.createfactorygraph.machines.MachineCache;
+import com.vws.createfactorygraph.safety.Safety;
 
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
@@ -15,10 +16,15 @@ import net.minecraft.world.level.Level;
 public abstract class RecipeGridHandlerMixin {
     @Inject(method = "tryToApplyRecipe", at = @At("HEAD"), cancellable = true)
     private static void cfg$recipeHit(Level world, RecipeGridHandler.GroupedItems items, CallbackInfoReturnable<ItemStack> cir) {
-        switch (MachineCache.lookupRecipe(items)) {
-            case NONE -> cir.setReturnValue(null);
-            case STACK -> cir.setReturnValue(MachineCache.copyRecipe(items));
-            case MISS -> { }
+        try {
+            switch (MachineCache.lookupRecipe(items)) {
+                case NONE -> cir.setReturnValue(null);
+                case STACK -> cir.setReturnValue(MachineCache.copyRecipe(items));
+                case MISS -> { }
+            }
+        } catch (Throwable t) {
+            Safety.noteFailOpen();
+            MachineCache.invalidateRecipes();
         }
     }
 

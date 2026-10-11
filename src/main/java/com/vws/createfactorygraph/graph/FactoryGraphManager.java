@@ -17,6 +17,7 @@ import com.vws.createfactorygraph.CreateFactoryGraph;
 import com.vws.createfactorygraph.FGConfig;
 import com.vws.createfactorygraph.hooks.DecorativePolicy;
 import com.vws.createfactorygraph.hooks.KineticNodeDuck;
+import com.vws.createfactorygraph.safety.Safety;
 import com.vws.createfactorygraph.mixin.accessor.BeltInventoryAccessor;
 import com.vws.createfactorygraph.mixin.accessor.KineticBlockEntityAccessor;
 import com.vws.createfactorygraph.mixin.accessor.LevelChunkInvoker;
@@ -75,6 +76,7 @@ public final class FactoryGraphManager {
     public long beltBackoffSkips, beltJamEvents, beltResumes;
     public long advanceTicks;
     public long parentedRebuilds, groundRebuilds;
+    private boolean disarmed;
     /** Test hook (/factorygraph cadence parent): network id -> synthetic ship key. */
     public final Long2ObjectOpenHashMap<Object> forcedParents = new Long2ObjectOpenHashMap<>();
 
@@ -114,11 +116,13 @@ public final class FactoryGraphManager {
     /** End of level tick. */
     public void endTick() {
         if (!FGConfig.enabled()) {
-            if (dormantCount > 0 || !sleepQueue.isEmpty()) wakeAll("disabled");
-            dirty.clear();
-            graphs.clear();
+            if (!disarmed) {
+                disarm();
+                disarmed = true;
+            }
             return;
         }
+        disarmed = false;
         tickCounter++;
         advanceTicks++;
 
@@ -185,44 +189,103 @@ public final class FactoryGraphManager {
     }
 
     /**
-     * Phase 4 parenting: ask the ship mod (via FactoryCadence locator) whether this network sits on a
-     * ship. All members of one Create network are rotationally connected, so they share a plot;
-     * we sample a few members and require agreement. Ground graphs clear any stale gate and never
-     * subscribe to anything.
+     * Parent a network only when sampled members agree on one ship and the network is under the
+     * size cap. A split (frozen sub-ship plus a flying one, or ship plus ground) refuses and
+     * clears gates. Only decorative relays receive a gate. Machines, belts, and contraption
+     * controllers are cleared so they cannot be throttled or catch-up-replayed.
      */
     private void applyParent(FactoryGraph g, KineticNetwork net) {
-        Object ship = forcedParents.get(g.networkId);
-        if (ship == null && FactoryCadence.hasLocator() && FGConfig.shipCadence()) {
-            int sampled = 0;
-            for (KineticBlockEntity be : net.members.keySet()) {
-                Object s = FactoryCadence.locateShip(level, be.getBlockPos().asLong());
-                if (sampled == 0) ship = s;
-                else if (s == null ? ship != null : !s.equals(ship)) { ship = null; break; }
-                if (++sampled >= 4) break;
+        int members = net.members.size();
+        int max = FGConfig.maxParentedMembers();
+        Object forced = forcedParents.get(g.networkId);
+        Safety.ParentChoice choice;
+        if (members > max) {
+            choice = Safety.ParentChoice.refuse();
+        } else if (forced != null) {
+            choice = Safety.ParentChoice.parent(forced);
+        } else if (!FactoryCadence.hasLocator() || !FGConfig.shipCadence()) {
+            choice = Safety.ParentChoice.ground();
+        } else {
+            KineticBlockEntity[] arr = net.members.keySet().toArray(KineticBlockEntity[]::new);
+            int[] idx = Safety.sampleIndices(arr.length, Safety.MAX_PARENT_SAMPLES);
+            Object[] samples = new Object[idx.length];
+            for (int i = 0; i < idx.length; i++) {
+                samples[i] = FactoryCadence.locateShip(level, arr[idx[i]].getBlockPos().asLong());
             }
+            choice = Safety.choose(samples, members, max);
         }
+        if (choice.kind == Safety.Parenting.REFUSE) Safety.noteRefusal();
+        Object ship = choice.kind == Safety.Parenting.PARENT ? choice.ship : null;
         ShipGate gate = ship == null ? null : FactoryCadence.gateFor(ship);
         g.shipKey = ship;
         int n = 0;
         for (KineticBlockEntity be : net.members.keySet()) {
             if (be.isRemoved() || be.getLevel() != level) continue;
-            setGate(be, gate);
-            n++;
+            boolean relay = isRelay(be);
+            setGate(be, relay ? gate : null);
+            if (relay && gate != null) n++;
         }
         for (GraphNode node : g.nodes.values()) {
             if (node.kind != NodeKind.LOGISTICS || !level.isLoaded(node.pos)) continue;
             BlockEntity t = level.getBlockEntity(node.pos);
-            if (t instanceof SmartBlockEntity sbe) { setGate(sbe, gate); n++; }
+            if (t instanceof SmartBlockEntity sbe) setGate(sbe, null);
         }
-        g.parentedBEs = gate == null ? 0 : n;
+        g.parentedBEs = n;
         if (gate != null) parentedRebuilds++; else groundRebuilds++;
+    }
+
+    /** Ship-mode changes rebuild networks that were parented to that ship. */
+    public void markShipDirty(Object shipKey) {
+        if (shipKey == null) return;
+        for (FactoryGraph g : graphs.values()) {
+            if (shipKey.equals(g.shipKey)) dirty.add(g.networkId);
+        }
+    }
+
+    /**
+     * Kill switch / disable: wake dormant relays, drop every gate, and drop debt without
+     * replaying it. Chunks are not written.
+     */
+    public void disarm() {
+        wakeAll("disarm");
+        Map<Long, KineticNetwork> nets = TorquePropagatorAccessor.cfg$getNetworks().get(level);
+        if (nets != null) {
+            for (KineticNetwork net : nets.values()) {
+                for (KineticBlockEntity be : net.members.keySet()) setGate(be, null);
+            }
+        }
+        for (FactoryGraph g : graphs.values()) {
+            for (GraphNode node : g.nodes.values()) {
+                if (!level.isLoaded(node.pos)) continue;
+                BlockEntity t = level.getBlockEntity(node.pos);
+                if (t instanceof SmartBlockEntity sbe) setGate(sbe, null);
+            }
+        }
+        graphs.clear();
+        dirty.clear();
+        forcedParents.clear();
+        jammedBelts.clear();
+    }
+
+    private static boolean isRelay(KineticBlockEntity be) {
+        KineticNodeDuck duck = (KineticNodeDuck) be;
+        byte kind = duck.cfg$candidate();
+        if (kind == DecorativePolicy.UNKNOWN) {
+            kind = DecorativePolicy.classify(be);
+            duck.cfg$setCandidate(kind);
+        }
+        return kind == DecorativePolicy.RELAY;
     }
 
     private static void setGate(SmartBlockEntity be, ShipGate gate) {
         CadenceDuck d = (CadenceDuck) be;
         if (d.cfg$gate() == gate) return;
-        if (gate == null) d.cfg$setDebt(0);
+        if (gate == null) {
+            Safety.noteForfeit(d.cfg$debt());
+            d.cfg$setDebt(0);
+        }
         d.cfg$setGate(gate);
+        d.cfg$setSeenEpoch(-1);
     }
 
     private void sleep(KineticBlockEntity be) {

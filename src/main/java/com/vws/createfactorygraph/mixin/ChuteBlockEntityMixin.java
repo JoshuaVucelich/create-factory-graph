@@ -10,6 +10,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import com.simibubi.create.content.logistics.chute.ChuteBlockEntity;
 import com.vws.createfactorygraph.logistics.LogisticsCache;
 import com.vws.createfactorygraph.profile.AreaProfiler;
+import com.vws.createfactorygraph.safety.Safety;
 
 @Mixin(ChuteBlockEntity.class)
 public abstract class ChuteBlockEntityMixin {
@@ -27,8 +28,12 @@ public abstract class ChuteBlockEntityMixin {
 
     @Inject(method = "canDirectlyInsert", at = @At("HEAD"), cancellable = true)
     private void cfg$hit(CallbackInfoReturnable<Boolean> cir) {
-        Boolean cached = LogisticsCache.chuteInsert((ChuteBlockEntity) (Object) this, getItemMotion() > 0);
-        if (cached != null) cir.setReturnValue(cached);
+        try {
+            Boolean cached = LogisticsCache.chuteInsert((ChuteBlockEntity) (Object) this, getItemMotion() > 0);
+            if (cached != null) cir.setReturnValue(cached);
+        } catch (Throwable t) {
+            Safety.noteFailOpen();
+        }
     }
 
     @Inject(method = "canDirectlyInsert", at = @At("RETURN"))

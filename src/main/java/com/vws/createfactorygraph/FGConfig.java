@@ -30,6 +30,10 @@ public final class FGConfig {
     public static final ModConfigSpec.BooleanValue TRAIN_POSITION_CACHE;
     public static final ModConfigSpec.BooleanValue CONTRAPTION_SHAPE_CACHE;
 
+    public static final ModConfigSpec.BooleanValue KILL_SWITCH;
+    public static final ModConfigSpec.IntValue MAX_CATCH_UP_PER_TICK;
+    public static final ModConfigSpec.IntValue MAX_PARENTED_MEMBERS;
+
     /** What a ship-parented factory does while its ship is CHEAP. */
     public enum CheapPolicy { SLOW, SLEEP, BURST }
 
@@ -46,6 +50,9 @@ public final class FGConfig {
     public static volatile Boolean runtimeRecipeCache = null;
     public static volatile Boolean runtimeTrainPositionCache = null;
     public static volatile Boolean runtimeContraptionShapeCache = null;
+
+    /** Runtime kill switch from /factorygraph kill|unkill. Null follows the config file. */
+    public static volatile Boolean runtimeKillSwitch = null;
 
     static {
         ModConfigSpec.Builder b = new ModConfigSpec.Builder();
@@ -95,7 +102,7 @@ public final class FGConfig {
         b.push("caches");
         NEIGHBOUR_CACHE = b.comment("Remember kinetic neighbour lists between block changes. The list is copied; Create's own list is left alone.")
                 .define("neighbours", true);
-        STRESS_CACHE = b.comment("Keep network stress and capacity incrementally. A cold network still runs Create's full scan, and chunk unload drops the totals.")
+        STRESS_CACHE = b.comment("Keep network stress and capacity incrementally. A cold network still runs Create's full scan. Removing a member drops that network's total. A chunk unload does not rescan every network on the server.")
                 .define("stress", true);
         LOGISTICS_CACHE = b.comment("Remember funnel belt-segment lookups, depot behaviour lookups, and chute insert checks until a block changes. Chute results also key off the sign of item motion. Entity search stays on Create's 5-tick cadence.")
                 .define("logistics", true);
@@ -106,10 +113,27 @@ public final class FGConfig {
         CONTRAPTION_SHAPE_CACHE = b.comment("Replay contraption block collision shapes for an unchanged local scan. Carriage contraptions that override portal hiding stay uncached. Actor ticks are unchanged.")
                 .define("contraptionShapes", true);
         b.pop();
+
+        b.push("safety");
+        KILL_SWITCH = b.comment("Fail open. When true the graph, ship cadence, belt backoff, and every cache are inert. Create ticks as stock. In-memory debt is dropped and not replayed. /factorygraph kill does the same until restart.")
+                .define("killSwitch", false);
+        MAX_CATCH_UP_PER_TICK = b.comment("Server-wide cap on extra decorative-relay ticks repaid in one server tick. Machines, belts, and contraptions are never repaid.")
+                .defineInRange("maxCatchUpPerTick", 64, 0, 100000);
+        MAX_PARENTED_MEMBERS = b.comment("Kinetic networks larger than this are not parented to a ship. They tick at Create's rate. Stops a partial ship-group freeze from scanning a megabase every rebuild.")
+                .defineInRange("maxParentedMembers", 8192, 16, 1000000);
+        b.pop();
         SPEC = b.build();
     }
 
+    /** True when the config kill switch or /factorygraph kill is on. */
+    public static boolean killed() {
+        Boolean rt = runtimeKillSwitch;
+        if (rt != null) return rt;
+        return SPEC.isLoaded() && KILL_SWITCH.get();
+    }
+
     public static boolean enabled() {
+        if (killed()) return false;
         Boolean rt = runtimeEnabled;
         if (rt != null) return rt;
         return SPEC.isLoaded() ? ENABLED.get() : false;
@@ -123,16 +147,20 @@ public final class FGConfig {
     public static boolean dormantBeltSegments() { return get(DORMANT_BELT_SEGMENTS, true); }
     public static int settleTicks() { return get(SETTLE_TICKS, 40); }
     public static boolean dormantValidation() { return get(DORMANT_VALIDATION, true); }
-    public static boolean jamBackoff() { return get(BELT_JAM_BACKOFF, true); }
+    public static boolean jamBackoff() { return !killed() && get(BELT_JAM_BACKOFF, true); }
     public static int jamDetectTicks() { return get(JAM_DETECT_TICKS, 40); }
     public static int maxBackoffTicks() { return get(MAX_BACKOFF_TICKS, 8); }
     public static int maxRebuildsPerTick() { return get(MAX_REBUILDS_PER_TICK, 16); }
     public static int maxEdgeNodes() { return get(MAX_EDGE_NODES, 10000); }
 
     public static boolean shipCadence() {
+        if (killed()) return false;
         Boolean rt = runtimeShipCadence;
         return rt != null ? rt : get(SHIP_CADENCE, true);
     }
+
+    public static int maxCatchUpPerTick() { return get(MAX_CATCH_UP_PER_TICK, 64); }
+    public static int maxParentedMembers() { return get(MAX_PARENTED_MEMBERS, 8192); }
     public static CheapPolicy cheapPolicy() {
         CheapPolicy rt = runtimePolicy;
         return rt != null ? rt : get(CHEAP_POLICY, CheapPolicy.SLOW);
@@ -144,6 +172,7 @@ public final class FGConfig {
 
 
     private static boolean flag(Boolean runtime, ModConfigSpec.BooleanValue value, boolean def) {
+        if (killed()) return false;
         return runtime != null ? runtime : get(value, def);
     }
 

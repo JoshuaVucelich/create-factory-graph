@@ -1,35 +1,63 @@
 package com.vws.createfactorygraph.cadence;
 
+import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
 import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 import com.vws.createfactorygraph.CreateFactoryGraph;
 import com.vws.createfactorygraph.FGConfig;
 import com.vws.createfactorygraph.api.FactoryCadence;
+import com.vws.createfactorygraph.hooks.DecorativePolicy;
+import com.vws.createfactorygraph.hooks.KineticNodeDuck;
+import com.vws.createfactorygraph.safety.Safety;
 
 import net.minecraft.world.level.Level;
 
 /**
- * Tick gate for block entities of ship-parented factory graphs. Only ever called for BEs whose
- * gate is non-null (ground BEs never reach this class).
- *
- * CHEAP:
- *  - SLOW  (default): the BE runs one normal tick per hull period, on the hull's own step phase;
- *          the other period-1 ticks become debt.
- *  - SLEEP: no ticks at all while CHEAP; every tick becomes debt.
- *  - BURST: on the hull step the BE runs its whole period of ticks back-to-back (throughput-exact,
- *          only batching; least saving).
- * Awake (FULL / REBUILDING): the BE ticks every tick and additionally repays up to
- * catchUpTicksPerTick of debt per tick until debt is 0.
- * Catch-up only ever runs Create's own SmartBlockEntity.tick(); nothing moves, ejects or drops items.
- * Debt above maxDebtTicks is forfeited (that work is simply not replayed; no items are touched).
+ * Tick gate for block entities of ship-parented factory graphs. Only decorative relays are
+ * deferred. Belts, deployers, bearings, and every other machine run Create's own tick.
+ * Debt on those is dropped, never replayed. Ground block entities never reach this class.
  */
 public final class ShipCadenceGate {
+    private static int budget;
 
-    /** @return true = skip this tick (deferred) */
+    public static void beginTick() {
+        budget = FGConfig.maxCatchUpPerTick();
+    }
+
+    public static int budgetRemaining() {
+        return budget;
+    }
+
+    /** @return true = skip this tick (deferred). False on any failure, so Create still ticks. */
     public static boolean beforeTick(Level level, SmartBlockEntity be, CadenceDuck duck) {
+        try {
+            return beforeTick0(level, be, duck);
+        } catch (Throwable t) {
+            Safety.noteFailOpen();
+            CreateFactoryGraph.LOGGER.warn("cadence gate failed open at {}: {}", be.getBlockPos(), t.toString());
+            dropGate(duck);
+            return false;
+        }
+    }
+
+    private static boolean beforeTick0(Level level, SmartBlockEntity be, CadenceDuck duck) {
+        byte kind = kindOf(be);
+        if (!Safety.mayDefer(kind, FGConfig.killed(), FGConfig.shipCadence())) {
+            dropGate(duck);
+            return false;
+        }
         ShipGate gate = duck.cfg$gate();
-        boolean active = FGConfig.enabled() && FGConfig.shipCadence();
+        if (gate == null) return false;
+        if (FactoryCadence.hasLocator() && duck.cfg$seenEpoch() != FactoryCadence.shipEpoch()) {
+            duck.cfg$setSeenEpoch(FactoryCadence.shipEpoch());
+            Object here = FactoryCadence.locateShip(level, be.getBlockPos().asLong());
+            if (!Safety.sameKey(gate.key, here)) {
+                Safety.noteSplit();
+                dropGate(duck);
+                return false;
+            }
+        }
         int debt = duck.cfg$debt();
-        if (active && gate.mode == FactoryCadence.Mode.CHEAP && settled(level, gate)) {
+        if (gate.mode == FactoryCadence.Mode.CHEAP && settled(level, gate)) {
             FGConfig.CheapPolicy policy = FGConfig.cheapPolicy();
             int cap = FGConfig.maxDebtTicks();
             if (policy == FGConfig.CheapPolicy.SLEEP) {
@@ -46,20 +74,38 @@ public final class ShipCadenceGate {
                 defer(gate, duck, debt, cap);
                 return true;
             }
-            if (policy == FGConfig.CheapPolicy.BURST && debt > 0) {
-                int n = Math.min(debt, p - 1 + FGConfig.catchUpTicksPerTick());
-                runExtra(be, duck, gate, debt, n);
-            }
+            if (policy == FGConfig.CheapPolicy.BURST && debt > 0) repay(be, duck, gate, debt);
             gate.ranTicks++;
-            return false; // the hull-step tick itself runs normally
+            return false;
         }
-        // awake (or feature off): repay debt gradually
-        if (debt > 0) {
-            int n = Math.min(debt, active ? FGConfig.catchUpTicksPerTick() : debt);
-            runExtra(be, duck, gate, debt, n);
-        }
+        if (debt > 0) repay(be, duck, gate, debt);
         gate.ranTicks++;
         return false;
+    }
+
+    private static byte kindOf(SmartBlockEntity be) {
+        if (!(be instanceof KineticBlockEntity kinetic)) return DecorativePolicy.NEVER;
+        KineticNodeDuck node = (KineticNodeDuck) kinetic;
+        byte kind = node.cfg$candidate();
+        if (kind == DecorativePolicy.UNKNOWN) {
+            kind = DecorativePolicy.classify(kinetic);
+            node.cfg$setCandidate(kind);
+        }
+        return kind;
+    }
+
+    private static void dropGate(CadenceDuck duck) {
+        int debt = duck.cfg$debt();
+        duck.cfg$setDebt(0);
+        duck.cfg$setGate(null);
+        Safety.noteForfeit(debt);
+    }
+
+    private static void repay(SmartBlockEntity be, CadenceDuck duck, ShipGate gate, int debt) {
+        int n = Safety.replayTicks(Safety.RELAY, debt, budget);
+        if (n <= 0) return;
+        budget -= n;
+        runExtra(be, duck, gate, debt, n);
     }
 
     private static boolean settled(Level level, ShipGate gate) {
@@ -86,7 +132,8 @@ public final class ShipCadenceGate {
                 be.tick();
             }
         } catch (Throwable t) {
-            CreateFactoryGraph.LOGGER.warn("cadence catch-up tick failed at {} ({}); dropping its debt", be.getBlockPos(), t.toString());
+            Safety.noteFailOpen();
+            CreateFactoryGraph.LOGGER.warn("cadence catch-up failed open at {} ({}); dropping its debt", be.getBlockPos(), t.toString());
             duck.cfg$setDebt(0);
             gate.catchUpTicks += done;
             gate.ranTicks += done;

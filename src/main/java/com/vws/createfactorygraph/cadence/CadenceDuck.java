@@ -6,4 +6,7 @@ public interface CadenceDuck {
     void cfg$setGate(ShipGate gate);
     int cfg$debt();
     void cfg$setDebt(int debt);
+    /** Ship-mode generation this block entity last checked against the locator. Not saved. */
+    int cfg$seenEpoch();
+    void cfg$setSeenEpoch(int epoch);
 }

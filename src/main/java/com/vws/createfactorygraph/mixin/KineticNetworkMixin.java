@@ -11,6 +11,7 @@ import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
 import com.vws.createfactorygraph.hooks.FactoryGraphHooks;
 import com.vws.createfactorygraph.kinetics.StressCache;
 import com.vws.createfactorygraph.profile.AreaProfiler;
+import com.vws.createfactorygraph.safety.Safety;
 
 @Mixin(KineticNetwork.class)
 public abstract class KineticNetworkMixin {
@@ -60,7 +61,13 @@ public abstract class KineticNetworkMixin {
     @Inject(method = "calculateStress", at = @At("HEAD"), cancellable = true)
     private void cfg$stressHit(CallbackInfoReturnable<Float> cir) {
         AreaProfiler.stressCalc.begin();
-        Float hit = StressCache.stress((KineticNetwork) (Object) this);
+        Float hit = null;
+        try {
+            hit = StressCache.stress((KineticNetwork) (Object) this);
+        } catch (Throwable t) {
+            Safety.noteFailOpen();
+            StressCache.invalidate((KineticNetwork) (Object) this);
+        }
         if (hit != null) {
             AreaProfiler.stressCalc.end();
             cir.setReturnValue(hit);
@@ -77,7 +84,13 @@ public abstract class KineticNetworkMixin {
     @Inject(method = "calculateCapacity", at = @At("HEAD"), cancellable = true)
     private void cfg$capHit(CallbackInfoReturnable<Float> cir) {
         AreaProfiler.stressCalc.begin();
-        Float hit = StressCache.capacity((KineticNetwork) (Object) this);
+        Float hit = null;
+        try {
+            hit = StressCache.capacity((KineticNetwork) (Object) this);
+        } catch (Throwable t) {
+            Safety.noteFailOpen();
+            StressCache.invalidate((KineticNetwork) (Object) this);
+        }
         if (hit != null) {
             AreaProfiler.stressCalc.end();
             cir.setReturnValue(hit);

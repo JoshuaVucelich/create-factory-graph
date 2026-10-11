@@ -9,6 +9,9 @@ import com.vws.createfactorygraph.FGConfig;
 import com.vws.createfactorygraph.profile.AreaProfiler;
 import com.vws.createfactorygraph.world.WorldEpoch;
 
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 
 /**
@@ -46,6 +49,29 @@ public final class NeighbourCache {
         slot.state = be.getBlockState();
         slot.neighbours = new ArrayList<>(neighbours);
         AreaProfiler.neighbourMisses++;
+    }
+
+    public static void clear() {
+        SLOTS.clear();
+    }
+
+    public static void evictChunk(Level level, ChunkPos pos) {
+        if (level == null || pos == null) return;
+        SLOTS.entrySet().removeIf(e -> {
+            if (inChunk(level, e.getKey(), pos)) return true;
+            List<KineticBlockEntity> neighbours = e.getValue().neighbours;
+            if (neighbours == null) return false;
+            for (int i = 0; i < neighbours.size(); i++) {
+                if (inChunk(level, neighbours.get(i), pos)) return true;
+            }
+            return false;
+        });
+    }
+
+    private static boolean inChunk(Level level, KineticBlockEntity be, ChunkPos pos) {
+        if (be == null || be.getLevel() != level) return false;
+        BlockPos p = be.getBlockPos();
+        return (p.getX() >> 4) == pos.x && (p.getZ() >> 4) == pos.z;
     }
 
     private NeighbourCache() {}

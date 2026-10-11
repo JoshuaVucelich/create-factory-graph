@@ -18,7 +18,10 @@ import com.vws.createfactorygraph.graph.FactoryGraph;
 import com.vws.createfactorygraph.graph.FactoryGraphManager;
 import com.vws.createfactorygraph.graph.GraphNode;
 import com.vws.createfactorygraph.hooks.KineticNodeDuck;
+import com.vws.createfactorygraph.cadence.ShipCadenceGate;
 import com.vws.createfactorygraph.profile.KineticTickProfiler;
+import com.vws.createfactorygraph.safety.Safety;
+import com.vws.createfactorygraph.safety.SafetyActions;
 
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
@@ -36,6 +39,8 @@ public final class FactoryGraphCommand {
                 .then(Commands.literal("status").executes(FactoryGraphCommand::status))
                 .then(Commands.literal("enable").executes(c -> setEnabled(c, true)))
                 .then(Commands.literal("disable").executes(c -> setEnabled(c, false)))
+                .then(Commands.literal("kill").executes(FactoryGraphCommand::kill))
+                .then(Commands.literal("unkill").executes(FactoryGraphCommand::unkill))
                 .then(Commands.literal("graphs").executes(FactoryGraphCommand::graphs))
                 .then(Commands.literal("rebuild").executes(FactoryGraphCommand::rebuild))
                 .then(Commands.literal("inspect")
@@ -79,7 +84,14 @@ public final class FactoryGraphCommand {
 
     private static int status(CommandContext<CommandSourceStack> c) {
         say(c, "factorygraph: graph mode " + (FGConfig.enabled() ? "ENABLED" : "DISABLED")
-                + (FGConfig.runtimeEnabled != null ? " (runtime override)" : ""));
+                + (FGConfig.runtimeEnabled != null ? " (runtime override)" : "")
+                + " killSwitch=" + (FGConfig.killed() ? "ON" : "OFF"));
+        say(c, String.format(
+                "safety: caches neighbours=%s stress=%s logistics=%s recipe=%s trainPosition=%s contraptionShapes=%s | machines/belts/contraptions/trains not throttled | fail-open=%d split-ungates=%d unsafe-debt-forfeited=%d parent-refusals=%d catch-up-budget=%d | cadence and caches are not saved",
+                on(FGConfig.neighbourCache()), on(FGConfig.stressCache()), on(FGConfig.logisticsCache()),
+                on(FGConfig.recipeCache()), on(FGConfig.trainPositionCache()), on(FGConfig.contraptionShapeCache()),
+                Safety.failOpens, Safety.splitUngates, Safety.forfeitedUnsafeDebt, Safety.parentRefusals,
+                ShipCadenceGate.budgetRemaining()));
         for (FactoryGraphManager m : FactoryGraphManager.all()) {
             say(c, String.format(
                     "[%s] graphs=%d nodes=%d edges=%d dirty=%d | dormant=%d sleeps=%d wakes=%d rebounds=%d | BE ticks skipped=%d validations=%d | rebuilds=%d advanceTicks=%d | belts jammed now=%d jamEvents=%d resumes=%d backoffSkips=%d",
@@ -88,6 +100,20 @@ public final class FactoryGraphCommand {
                     m.advanceTicks, m.jammedBelts.size(), m.beltJamEvents, m.beltResumes, m.beltBackoffSkips));
         }
         return 1;
+    }
+
+    private static String on(boolean v) { return v ? "ON" : "OFF"; }
+
+    private static int kill(CommandContext<CommandSourceStack> c) {
+        FGConfig.runtimeKillSwitch = true;
+        SafetyActions.disarmAll();
+        return say(c, "KILL SWITCH ON. Create stock ticking. Gates cleared, debt dropped (not replayed), caches cleared. Nothing was written to disk.");
+    }
+
+    private static int unkill(CommandContext<CommandSourceStack> c) {
+        FGConfig.runtimeKillSwitch = false;
+        for (FactoryGraphManager m : FactoryGraphManager.all()) m.markAllKnownDirty();
+        return say(c, "kill switch off (config file still applies if safety.killSwitch is true). Networks marked for rebuild.");
     }
 
     private static int setEnabled(CommandContext<CommandSourceStack> c, boolean on) {

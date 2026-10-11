@@ -11,6 +11,7 @@ import com.simibubi.create.content.contraptions.ContraptionCollider;
 import com.simibubi.create.content.contraptions.AbstractContraptionEntity;
 import com.vws.createfactorygraph.contraptions.ContraptionShapeCache;
 import com.vws.createfactorygraph.profile.AreaProfiler;
+import com.vws.createfactorygraph.safety.Safety;
 
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
@@ -32,7 +33,14 @@ public abstract class ContraptionColliderMixin {
     @Inject(method = "getPotentiallyCollidedShapes", at = @At("HEAD"), cancellable = true)
     private static void cfg$replay(Level world, Contraption contraption, AABB localBB, Shapes.DoubleLineConsumer out, CallbackInfo ci) {
         AreaProfiler.contraptionShapes.begin();
-        if (ContraptionShapeCache.replay(contraption, localBB, out)) {
+        boolean replayed = false;
+        try {
+            replayed = ContraptionShapeCache.replay(contraption, localBB, out);
+        } catch (Throwable t) {
+            Safety.noteFailOpen();
+            ContraptionShapeCache.invalidate(contraption);
+        }
+        if (replayed) {
             AreaProfiler.contraptionShapes.end();
             ci.cancel();
         } else {

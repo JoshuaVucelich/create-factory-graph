@@ -99,6 +99,11 @@ public final class ContraptionShapeCache {
         AreaProfiler.shapeMisses++;
     }
 
+    public static void clear() {
+        MAP.clear();
+        RECORDING.remove();
+    }
+
     public static void invalidate(Contraption contraption) {
         if (!com.vws.createfactorygraph.world.ServerThread.isServer() || contraption == null) return;
         MAP.remove(contraption);

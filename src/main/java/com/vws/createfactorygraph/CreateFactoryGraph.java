@@ -3,12 +3,17 @@ package com.vws.createfactorygraph;
 import org.slf4j.Logger;
 
 import com.mojang.logging.LogUtils;
+import com.vws.createfactorygraph.api.FactoryCadence;
+import com.vws.createfactorygraph.cadence.ShipCadenceGate;
 import com.vws.createfactorygraph.command.FactoryGraphCommand;
 import com.vws.createfactorygraph.graph.FactoryGraphManager;
-import com.vws.createfactorygraph.kinetics.StressCache;
+import com.vws.createfactorygraph.kinetics.NeighbourCache;
+import com.vws.createfactorygraph.logistics.LogisticsCache;
 import com.vws.createfactorygraph.profile.KineticTickProfiler;
 
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.LevelAccessor;
+import net.minecraft.world.level.chunk.ChunkAccess;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
@@ -46,6 +51,10 @@ public class CreateFactoryGraph {
         NeoForge.EVENT_BUS.addListener(this::onServerTickPost);
         NeoForge.EVENT_BUS.addListener(this::onLevelUnload);
         NeoForge.EVENT_BUS.addListener(this::onChunkUnload);
+        NeoForge.EVENT_BUS.addListener(this::onChunkLoad);
+        FactoryCadence.addListener((key, mode) -> {
+            for (FactoryGraphManager manager : FactoryGraphManager.all()) manager.markShipDirty(key);
+        });
     }
 
     private void commonSetup(FMLCommonSetupEvent event) {
@@ -72,6 +81,7 @@ public class CreateFactoryGraph {
     }
 
     private void onServerTickPre(ServerTickEvent.Pre event) {
+        ShipCadenceGate.beginTick();
         KineticTickProfiler.serverTickStart();
     }
 
@@ -80,7 +90,18 @@ public class CreateFactoryGraph {
     }
 
     private void onChunkUnload(ChunkEvent.Unload event) {
-        if (!event.getLevel().isClientSide()) StressCache.invalidateAll();
+        evictChunk(event.getLevel(), event.getChunk());
+    }
+
+    private void onChunkLoad(ChunkEvent.Load event) {
+        evictChunk(event.getLevel(), event.getChunk());
+    }
+
+    /** Position-keyed caches do not survive a chunk leaving memory. Stress totals follow KineticNetwork.remove. */
+    private static void evictChunk(LevelAccessor level, ChunkAccess chunk) {
+        if (level == null || chunk == null || level.isClientSide() || !(level instanceof ServerLevel server)) return;
+        LogisticsCache.evictChunk(server, chunk.getPos());
+        NeighbourCache.evictChunk(server, chunk.getPos());
     }
 
     private void onLevelUnload(LevelEvent.Unload event) {

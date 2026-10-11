@@ -15,6 +15,7 @@ import com.vws.createfactorygraph.world.WorldEpoch;
 
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
@@ -153,7 +154,7 @@ public final class LogisticsCache {
 
     /** @return cached canDirectlyInsert, or null to run the original */
     public static Boolean chuteInsert(ChuteBlockEntity chute, boolean motionUp) {
-        if (!active() || chute.getLevel() == null || chute.getLevel().isClientSide) return null;
+        if (!active() || chute.isRemoved() || chute.getLevel() == null || chute.getLevel().isClientSide) return null;
         ChuteSlot slot = CHUTES.get(chute);
         if (slot != null && slot.present && slot.epoch == WorldEpoch.get() && slot.motionUp == motionUp) {
             AreaProfiler.logisticsHits++;
@@ -172,6 +173,35 @@ public final class LogisticsCache {
         slot.value = value;
         slot.present = true;
         AreaProfiler.logisticsMisses++;
+    }
+
+    public static void clear() {
+        SEGMENTS.clear();
+        BEHAVIOURS.clear();
+        FUNNEL_ABOVE.clear();
+        CHUTES.clear();
+        seenEpoch = Long.MIN_VALUE;
+    }
+
+    /** Drop lookups whose block sits in this chunk. Behaviour keys are not plain positions, so that map is dropped for the level. */
+    public static void evictChunk(Level level, ChunkPos pos) {
+        if (level == null || pos == null) return;
+        evictPositions(SEGMENTS.get(level), pos);
+        evictPositions(FUNNEL_ABOVE.get(level), pos);
+        BEHAVIOURS.remove(level);
+        CHUTES.entrySet().removeIf(e -> {
+            ChuteBlockEntity chute = e.getKey();
+            return chute.isRemoved() || (chute.getLevel() == level && inChunk(chute.getBlockPos(), pos));
+        });
+    }
+
+    private static boolean inChunk(BlockPos p, ChunkPos pos) {
+        return (p.getX() >> 4) == pos.x && (p.getZ() >> 4) == pos.z;
+    }
+
+    private static void evictPositions(Long2ObjectOpenHashMap<?> map, ChunkPos pos) {
+        if (map == null || map.isEmpty()) return;
+        map.long2ObjectEntrySet().removeIf(e -> inChunk(BlockPos.of(e.getLongKey()), pos));
     }
 
     private LogisticsCache() {}

@@ -16,7 +16,7 @@ One jar covers Create 6.0.5 through 6.0.10. The dependency range is `[6.0.5,6.0.
 
 **Stress.** Create already recalculates stress on network events. This mod does not add a per-tick stress pass, and it rebuilds graphs only when the network changes.
 
-**Ship cadence.** `com.vws.createfactorygraph.api.FactoryCadence` (API version 2) lets a ship mod, such as Aeronautics via `aeronautics_ship_hull`, register a locator and a hull mode by reflection. No compile dependency on the ship mod. Graphs whose blocks sit on that ship follow the hull cadence. Ground factories are left alone. While the ship is `CHEAP`, the default policy is `SLOW`: each block entity ticks once per hull period and defers the rest. `SLEEP` defers every tick. `BURST` runs the whole period back to back on the hull step. When the ship returns to `FULL` or `REBUILDING`, deferred ticks are replayed through Create's own `SmartBlockEntity.tick()`, a few per tick. Debt past the cap is dropped, and items are not touched. With no ship mod registered, nothing is parented and factories tick the same way they do on the ground.
+**Ship cadence.** `com.vws.createfactorygraph.api.FactoryCadence` (API version 2) lets a ship mod, such as Aeronautics via `aeronautics_ship_hull`, register a locator and a hull mode by reflection. No compile dependency on the ship mod. A kinetic network is parented only when sampled members agree on one ship and the network is under `safety.maxParentedMembers`. A split between a frozen sub-ship and a flying one is left on Create's own tick. Only decorative relays are deferred. Belts, deployers, bearings, and other machines are never throttled, and any debt they already held is dropped instead of replayed. While the ship is `CHEAP`, the default policy is `SLOW`: each parented relay ticks once per hull period. `SLEEP` defers every relay tick. `BURST` runs the relay's period back to back, capped by `safety.maxCatchUpPerTick` for the whole server. With no ship mod registered, nothing is parented. `safety.killSwitch` or `/factorygraph kill` turns the graph, the cadence, and every cache off. See `docs/FAILURE_SCENARIOS.md`.
 
 No chunk loading. Lookups use `getChunkNow` and Create's loaded checks.
 
@@ -106,6 +106,10 @@ Op level 2.
 - `caches.recipe` (true)
 - `caches.trainPosition` (true)
 - `caches.contraptionShapes` (true)
+- `safety.killSwitch` (false). `/factorygraph kill` does the same until restart and drops in-memory debt without replaying it
+- `safety.maxCatchUpPerTick` (64), `safety.maxParentedMembers` (8192)
+
+`/factorygraph status` reports the kill switch, each cache, and the fail-open counters. See `docs/FAILURE_SCENARIOS.md`.
 
 ## Server only
 
@@ -126,7 +130,7 @@ Java 21.
 ./gradlew build
 ```
 
-Jar: `build/libs/create_factory_graph-1.1.0-perf-combined.jar`
+Jar: `build/libs/create_factory_graph-1.1.0-hardening.jar`
 
 ## Pins
 

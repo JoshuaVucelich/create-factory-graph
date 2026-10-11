@@ -13,9 +13,11 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import com.simibubi.create.content.kinetics.belt.BeltBlockEntity;
 import com.simibubi.create.content.kinetics.belt.transport.BeltInventory;
 import com.simibubi.create.content.kinetics.belt.transport.TransportedItemStack;
+import com.vws.createfactorygraph.CreateFactoryGraph;
 import com.vws.createfactorygraph.FGConfig;
 import com.vws.createfactorygraph.graph.FactoryGraphManager;
 import com.vws.createfactorygraph.profile.KineticTickProfiler;
+import com.vws.createfactorygraph.safety.Safety;
 
 import net.minecraft.server.level.ServerLevel;
 
@@ -60,6 +62,16 @@ public abstract class BeltInventoryMixin {
 
     @Inject(method = "tick", at = @At("HEAD"), cancellable = true)
     private void cfg$head(CallbackInfo ci) {
+        try {
+            cfg$head0(ci);
+        } catch (Throwable t) {
+            Safety.noteFailOpen();
+            CreateFactoryGraph.LOGGER.warn("belt backoff failed open: {}", t.toString());
+        }
+    }
+
+    @Unique
+    private void cfg$head0(CallbackInfo ci) {
         if (!(belt.getLevel() instanceof ServerLevel sl)) return;
         if (cfg$wait > 0) {
             if (!FGConfig.enabled() || !FGConfig.jamBackoff() || !toInsert.isEmpty() || !toRemove.isEmpty()
