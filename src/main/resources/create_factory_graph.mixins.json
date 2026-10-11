@@ -16,6 +16,8 @@
     "DepotBehaviourMixin",
     "FunnelBlockEntityMixin",
     "RotationPropagatorMixin",
+    "RecipeGridHandlerMixin",
+    "RecipeManagerMixin",
     "accessor.BeltBlockEntityAccessor",
     "accessor.BeltInventoryAccessor",
     "accessor.KineticBlockEntityAccessor",
@@ -24,7 +26,8 @@
     "accessor.LevelChunkInvoker",
     "accessor.RotationPropagatorInvoker",
     "accessor.SmartBlockEntityAccessor",
-    "accessor.TorquePropagatorAccessor"
+    "accessor.TorquePropagatorAccessor",
+    "accessor.GroupedItemsAccessor"
   ],
   "injectors": {
     "defaultRequire": 1

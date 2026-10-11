@@ -12,10 +12,16 @@ public final class AreaProfiler {
     public static final Section funnel = new Section();
     public static final Section depot = new Section();
     public static final Section chute = new Section();
+    public static final Section trainPosition = new Section();
+    public static final Section contraptionShapes = new Section();
+    public static final Section contraptionCollide = new Section();
 
     public static long neighbourHits, neighbourMisses;
     public static long stressHits, stressMisses;
     public static long logisticsHits, logisticsMisses;
+    public static long recipeHits, recipeMisses;
+    public static long trainPosHits, trainPosMisses;
+    public static long shapeHits, shapeMisses;
 
     public static final class Section {
         public long nanos;
@@ -36,7 +42,7 @@ public final class AreaProfiler {
     }
 
     public static void reset() {
-        for (Section s : new Section[] {neighbourScan, stressCalc, funnel, depot, chute}) {
+        for (Section s : new Section[] {neighbourScan, stressCalc, funnel, depot, chute, trainPosition, contraptionShapes, contraptionCollide}) {
             s.nanos = 0;
             s.calls = 0;
             s.start = 0;
@@ -44,6 +50,9 @@ public final class AreaProfiler {
         neighbourHits = neighbourMisses = 0;
         stressHits = stressMisses = 0;
         logisticsHits = logisticsMisses = 0;
+        recipeHits = recipeMisses = 0;
+        trainPosHits = trainPosMisses = 0;
+        shapeHits = shapeMisses = 0;
     }
 
     public static String line(String name, Section s, long ticks) {
@@ -58,11 +67,17 @@ public final class AreaProfiler {
         sb.append(line("funnel", funnel, ticks)).append('\n');
         sb.append(line("depot", depot, ticks)).append('\n');
         sb.append(line("chute", chute, ticks)).append('\n');
+        sb.append(line("trainPosition", trainPosition, ticks)).append('\n');
+        sb.append(line("contraptionShapes", contraptionShapes, ticks)).append('\n');
+        sb.append(line("contraptionCollide", contraptionCollide, ticks)).append('\n');
         sb.append(String.format(
-                "hits neighbour %d/%d stress %d/%d logistics %d/%d",
+                "hits neighbour %d/%d stress %d/%d logistics %d/%d recipe %d/%d train %d/%d shape %d/%d",
                 neighbourHits, neighbourHits + neighbourMisses,
                 stressHits, stressHits + stressMisses,
-                logisticsHits, logisticsHits + logisticsMisses));
+                logisticsHits, logisticsHits + logisticsMisses,
+                recipeHits, recipeHits + recipeMisses,
+                trainPosHits, trainPosHits + trainPosMisses,
+                shapeHits, shapeHits + shapeMisses));
         return sb.toString();
     }
 

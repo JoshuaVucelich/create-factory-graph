@@ -36,6 +36,16 @@ On a settled world (32 chutes, 32 depots holding iron, 32 retracted belt funnels
 
 Issue: `docs/issues/002-logistics.md`.
 
+## Mechanical crafter recipes
+
+`caches.recipe` stores the item `RecipeGridHandler.tryToApplyRecipe` returned for an identical grouped grid, including the `allowRegularCraftingInCrafter` config bit. A hit returns a copy of that stack. Null and empty stay distinct. The map clears when `RecipeManager` applies a new recipe set. Client threads call the original search.
+
+200 searches of two oak planks, after 40 untimed searches: 40.215 ms with the cache off, then 0.627 ms with it on (200/200 hits), then 26.157 ms with it off again. Every result was `minecraft:stick x4`.
+
+A chain-walk skip for a not-ready 3-crafter line was slower than the walk (warm off 1.292 ms, cache on 2.507 ms, 200 calls, inventory unchanged) and is not in this build. Deployer `shouldActivate` caching was 608 ns/call off and 931 ns/call on and is not in this build either.
+
+Issue: `docs/issues/004-machines.md`.
+
 ## Commands
 
 Op level 2.
@@ -71,6 +81,7 @@ Op level 2.
 - `ship_cadence.enabled`, `cheapPolicy` (`SLOW`), `defaultHullPeriod` (2), `catchUpTicksPerTick` (2), `maxDebtTicks` (6000), `cheapSettleTicks` (20)
 - `caches.neighbours` (true), `caches.stress` (true)
 - `caches.logistics` (true)
+- `caches.recipe` (true)
 
 ## Server only
 
