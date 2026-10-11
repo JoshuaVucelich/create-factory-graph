@@ -25,6 +25,7 @@ public final class FGConfig {
 
     public static final ModConfigSpec.BooleanValue NEIGHBOUR_CACHE;
     public static final ModConfigSpec.BooleanValue STRESS_CACHE;
+    public static final ModConfigSpec.BooleanValue LOGISTICS_CACHE;
 
     /** What a ship-parented factory does while its ship is CHEAP. */
     public enum CheapPolicy { SLOW, SLEEP, BURST }
@@ -38,6 +39,7 @@ public final class FGConfig {
 
     public static volatile Boolean runtimeNeighbourCache = null;
     public static volatile Boolean runtimeStressCache = null;
+    public static volatile Boolean runtimeLogisticsCache = null;
 
     static {
         ModConfigSpec.Builder b = new ModConfigSpec.Builder();
@@ -89,6 +91,8 @@ public final class FGConfig {
                 .define("neighbours", true);
         STRESS_CACHE = b.comment("Keep network stress and capacity incrementally. A cold network still runs Create's full scan, and chunk unload drops the totals.")
                 .define("stress", true);
+        LOGISTICS_CACHE = b.comment("Remember funnel belt-segment lookups, depot behaviour lookups, and chute insert checks until a block changes. Chute results also key off the sign of item motion. Entity search stays on Create's 5-tick cadence.")
+                .define("logistics", true);
         b.pop();
         SPEC = b.build();
     }
@@ -133,6 +137,7 @@ public final class FGConfig {
 
     public static boolean neighbourCache() { return flag(runtimeNeighbourCache, NEIGHBOUR_CACHE, true); }
     public static boolean stressCache() { return flag(runtimeStressCache, STRESS_CACHE, true); }
+    public static boolean logisticsCache() { return flag(runtimeLogisticsCache, LOGISTICS_CACHE, true); }
 
     private FGConfig() {}
 }
