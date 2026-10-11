@@ -7,7 +7,7 @@ modId="${mod_id}"
 version="${mod_version}"
 displayName="${mod_name}"
 authors="${mod_authors}"
-description='''Server-side Create kinetic factory graph: event-driven network graphs, dormant decorative relays, jammed-belt backoff. Compatible with Create 6.0.5–6.0.10 (mixin targets stable). Combined test build: neighbour and stress caches, and funnel, depot, and chute lookups.'''
+description='''Server-side Create kinetic factory graph: event-driven network graphs, dormant decorative relays, jammed-belt backoff. Compatible with Create 6.0.5–6.0.10 (mixin targets stable). Combined test build: neighbour and stress caches, funnel/depot/chute lookups, mechanical-crafter recipe cache, train point positions, and contraption collision shape replay. The belt segment cache is not included.'''
 # Server-side only: vanilla/Create clients without this mod can join.
 displayTest="IGNORE_ALL_VERSION"
 

@@ -45,6 +45,7 @@ Issue: `docs/issues/002-logistics.md`.
 A chain-walk skip for a not-ready 3-crafter line was slower than the walk (warm off 1.292 ms, cache on 2.507 ms, 200 calls, inventory unchanged) and is not in this build. Deployer `shouldActivate` caching was 608 ns/call off and 931 ns/call on and is not in this build either.
 
 Issue: `docs/issues/004-machines.md`.
+
 ## Train point positions
 
 `caches.trainPosition` reuses the `Vec3` from `TravellingPoint.getPositionWithOffset` while the edge, graph, position bits, offset bits, and flip are unchanged. Signal scouting still travels every tick, and carriage collision still runs at speed 0. Those paths re-establish reservations and contacts. Client threads call the original method.
@@ -52,6 +53,7 @@ Issue: `docs/issues/004-machines.md`.
 On one straight 32-block andesite edge, 64 points, measured back to back after a warmup: 30 passes over the points went from 0.224 ms to 0.179 ms, and asking each point 30 times in a row went from 0.174 ms to 0.107 ms. Both cached loops hit 1984/1984, and the position bits matched (`6220146625772257280`).
 
 Issue: `docs/issues/005-trains.md`.
+
 ## Contraption collision shapes
 
 `caches.contraptionShapes` replays the boxes `ContraptionCollider.getPotentiallyCollidedShapes` recorded for the same contraption, the same quantized scan range, and the same block count, until a block changes or `AbstractContraptionEntity.setBlock` runs. The scan range is Create's own inflate (0.5, then the horizontal and vertical factor). A miss still walks the shapes and feeds the original consumer. Carriage contraptions that override `isHiddenInPortal` stay uncached. Actor ticks are unchanged. Client threads run the original scan.
@@ -59,6 +61,7 @@ Issue: `docs/issues/005-trains.md`.
 The bench assembled a bearing contraption of one andesite casing (`assemble` returned true, 1 block) and ran `collideEntities` (121 calls, 0.035 ms/tick with the cache off). `getPotentiallyCollidedShapes` was not entered, so the shape cache recorded 0 hits and 0 misses. The later drop in collide time is a different window, not this cache.
 
 Issue: `docs/issues/006-contraptions.md`.
+
 ## Belt segment lookups
 
 Item transport still uses the jam backoff already in this mod. A separate cache of segments with no funnel, tunnel, crusher, or processor was measured and left out. On one 24-block belt with 6 cobblestone, positions reset so both 200-tick windows saw the same motion, the inventory tick went from 7456 ns/call (0.015 ms/tick) to 11451 ns/call (0.023 ms/tick). 2534 of 2763 segment checks hit, and the bookkeeping still cost more than the block-state reads. Item positions and side offsets matched bit for bit (`beltPosition` and `sideOffset` float bits, item, and count).
@@ -102,7 +105,7 @@ Op level 2.
 - `caches.logistics` (true)
 - `caches.recipe` (true)
 - `caches.trainPosition` (true)
-- ``caches.contraptionShapes` (true)`
+- `caches.contraptionShapes` (true)
 
 ## Server only
 
