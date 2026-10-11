@@ -1,0 +1,52 @@
+package com.vws.createfactorygraph.kinetics;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.WeakHashMap;
+
+import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
+import com.vws.createfactorygraph.FGConfig;
+import com.vws.createfactorygraph.profile.AreaProfiler;
+import com.vws.createfactorygraph.world.WorldEpoch;
+
+import net.minecraft.world.level.block.state.BlockState;
+
+/**
+ * Memoises {@code RotationPropagator.getConnectedNeighbours}. Connections depend only on block
+ * states, so the list is dropped on the next block change or if a neighbour is removed.
+ */
+public final class NeighbourCache {
+    private static final WeakHashMap<KineticBlockEntity, Slot> SLOTS = new WeakHashMap<>();
+
+    private static final class Slot {
+        long epoch;
+        BlockState state;
+        List<KineticBlockEntity> neighbours;
+    }
+
+    public static List<KineticBlockEntity> get(KineticBlockEntity be) {
+        if (!FGConfig.enabled() || !FGConfig.neighbourCache()) return null;
+        if (be.getLevel() == null || be.getLevel().isClientSide) return null;
+        Slot slot = SLOTS.get(be);
+        if (slot == null || slot.epoch != WorldEpoch.get() || slot.state != be.getBlockState()) return null;
+        for (int i = 0; i < slot.neighbours.size(); i++) {
+            KineticBlockEntity n = slot.neighbours.get(i);
+            if (n.isRemoved()) return null;
+        }
+        AreaProfiler.neighbourHits++;
+        return slot.neighbours;
+    }
+
+    public static void put(KineticBlockEntity be, List<KineticBlockEntity> neighbours) {
+        if (!FGConfig.enabled() || !FGConfig.neighbourCache()) return;
+        if (be.getLevel() == null || be.getLevel().isClientSide || neighbours == null) return;
+        Slot slot = SLOTS.computeIfAbsent(be, k -> new Slot());
+        if (slot.neighbours == neighbours && slot.epoch == WorldEpoch.get() && slot.state == be.getBlockState()) return;
+        slot.epoch = WorldEpoch.get();
+        slot.state = be.getBlockState();
+        slot.neighbours = new ArrayList<>(neighbours);
+        AreaProfiler.neighbourMisses++;
+    }
+
+    private NeighbourCache() {}
+}
