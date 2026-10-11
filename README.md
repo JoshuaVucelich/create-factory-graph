@@ -59,6 +59,11 @@ Issue: `docs/issues/005-trains.md`.
 The bench assembled a bearing contraption of one andesite casing (`assemble` returned true, 1 block) and ran `collideEntities` (121 calls, 0.035 ms/tick with the cache off). `getPotentiallyCollidedShapes` was not entered, so the shape cache recorded 0 hits and 0 misses. The later drop in collide time is a different window, not this cache.
 
 Issue: `docs/issues/006-contraptions.md`.
+## Belt segment lookups
+
+Item transport still uses the jam backoff already in this mod. A separate cache of segments with no funnel, tunnel, crusher, or processor was measured and left out. On one 24-block belt with 6 cobblestone, positions reset so both 200-tick windows saw the same motion, the inventory tick went from 7456 ns/call (0.015 ms/tick) to 11451 ns/call (0.023 ms/tick). 2534 of 2763 segment checks hit, and the bookkeeping still cost more than the block-state reads. Item positions and side offsets matched bit for bit (`beltPosition` and `sideOffset` float bits, item, and count).
+
+Issue: `docs/issues/001-belts.md`.
 
 ## Commands
 
