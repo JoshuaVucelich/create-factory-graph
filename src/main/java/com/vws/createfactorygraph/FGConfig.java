@@ -125,11 +125,13 @@ public final class FGConfig {
         SPEC = b.build();
     }
 
-    /** True when the config kill switch or /factorygraph kill is on. */
+    /**
+     * True when {@code /factorygraph kill} is on, or the config kill switch is on.
+     * A runtime false does not turn a config kill off. {@code /factorygraph unkill} clears the runtime value.
+     */
     public static boolean killed() {
-        Boolean rt = runtimeKillSwitch;
-        if (rt != null) return rt;
-        return SPEC.isLoaded() && KILL_SWITCH.get();
+        boolean configOn = SPEC.isLoaded() && KILL_SWITCH.get();
+        return com.vws.createfactorygraph.safety.Safety.killActive(runtimeKillSwitch, configOn);
     }
 
     public static boolean enabled() {

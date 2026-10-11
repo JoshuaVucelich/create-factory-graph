@@ -11,6 +11,8 @@ public final class ShipGate {
     public volatile FactoryCadence.Mode mode = FactoryCadence.Mode.FULL;
     public volatile int period = -1;
     public volatile int phase = -1;
+    /** Bumped only when this ship's mode changes. Other ships keep their own count. */
+    public volatile int epoch;
 
     // stats
     public long deferredTicks;   // BE ticks deferred while CHEAP
@@ -29,8 +31,11 @@ public final class ShipGate {
     public void update(FactoryCadence.Mode m, int periodTicks, int phaseTick) {
         if (periodTicks > 0) period = periodTicks;
         if (phaseTick >= 0) phase = phaseTick;
-        if (m != mode) cheapSince = -1;
-        mode = m;
+        if (m != mode) {
+            cheapSince = -1;
+            epoch++;
+            mode = m;
+        }
     }
 
     public int effectivePeriod(int fallback) {

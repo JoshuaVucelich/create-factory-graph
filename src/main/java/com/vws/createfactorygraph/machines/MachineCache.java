@@ -8,6 +8,7 @@ import com.simibubi.create.content.kinetics.crafter.RecipeGridHandler;
 import com.simibubi.create.infrastructure.config.AllConfigs;
 import com.vws.createfactorygraph.FGConfig;
 import com.vws.createfactorygraph.mixin.accessor.GroupedItemsAccessor;
+import com.vws.createfactorygraph.safety.Safety;
 import com.vws.createfactorygraph.profile.AreaProfiler;
 
 import net.minecraft.world.item.ItemStack;
@@ -24,9 +25,17 @@ public final class MachineCache {
         final int[] packed;
         final int hash;
 
-        RecipeKey(RecipeGridHandler.GroupedItems items) {
+        static RecipeKey of(RecipeGridHandler.GroupedItems items) {
+            if (!(items instanceof GroupedItemsAccessor acc)) {
+                Safety.noteFailOpen();
+                return null;
+            }
+            return new RecipeKey(acc);
+        }
+
+        RecipeKey(GroupedItemsAccessor items) {
             allowRegular = AllConfigs.server().recipes.allowRegularCraftingInCrafter.get();
-            Map<Pair<Integer, Integer>, ItemStack> grid = ((GroupedItemsAccessor) items).cfg$grid();
+            Map<Pair<Integer, Integer>, ItemStack> grid = items.cfg$grid();
             packed = new int[grid.size() * 4];
             int i = 0;
             int h = allowRegular ? 1 : 2;
@@ -72,20 +81,25 @@ public final class MachineCache {
 
     public static RecipeAnswer lookupRecipe(RecipeGridHandler.GroupedItems items) {
         if (!com.vws.createfactorygraph.world.ServerThread.isServer() || !FGConfig.enabled() || !FGConfig.recipeCache()) return RecipeAnswer.MISS;
-        RecipeSlot slot = RECIPES.get(new RecipeKey(items));
+        RecipeKey key = RecipeKey.of(items);
+        if (key == null) return RecipeAnswer.MISS;
+        RecipeSlot slot = RECIPES.get(key);
         if (slot == null) return RecipeAnswer.MISS;
         AreaProfiler.recipeHits++;
         return slot.stack == null ? RecipeAnswer.NONE : RecipeAnswer.STACK;
     }
 
     public static ItemStack copyRecipe(RecipeGridHandler.GroupedItems items) {
-        RecipeSlot slot = RECIPES.get(new RecipeKey(items));
+        RecipeKey key = RecipeKey.of(items);
+        if (key == null) return ItemStack.EMPTY;
+        RecipeSlot slot = RECIPES.get(key);
         return slot == null || slot.stack == null ? ItemStack.EMPTY : slot.stack.copy();
     }
 
     public static void storeRecipe(RecipeGridHandler.GroupedItems items, ItemStack result) {
         if (!com.vws.createfactorygraph.world.ServerThread.isServer() || !FGConfig.enabled() || !FGConfig.recipeCache()) return;
-        RecipeKey key = new RecipeKey(items);
+        RecipeKey key = RecipeKey.of(items);
+        if (key == null) return;
         if (RECIPES.containsKey(key)) return;
         RECIPES.put(key, new RecipeSlot(result == null ? null : result.copy()));
         AreaProfiler.recipeMisses++;

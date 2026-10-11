@@ -36,10 +36,9 @@ public abstract class SmartBlockEntityTickerMixin {
                 skip = ShipCadenceGate.beforeTick(level, (SmartBlockEntity) be, duck);
             } catch (Throwable t) {
                 failed = true;
-                Safety.noteFailOpen();
                 duck.cfg$setDebt(0);
                 duck.cfg$setGate(null);
-                CreateFactoryGraph.LOGGER.warn("ticker gate failed open at {}: {}", pos, t.toString());
+                if (Safety.noteFailOpen()) CreateFactoryGraph.LOGGER.warn("ticker gate failed open at {}: {}", pos, t.toString());
             }
             if (Safety.skipOriginal(skip, failed)) {
                 ci.cancel();

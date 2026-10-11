@@ -95,6 +95,40 @@ class SafetyTest {
     }
 
     @Test
+    void unkillDoesNotMaskConfigKill() {
+        assertTrue(Safety.killActive(null, true));
+        assertTrue(Safety.killActive(Boolean.TRUE, false));
+        assertTrue(Safety.killActive(Boolean.FALSE, true));
+        assertFalse(Safety.killActive(null, false));
+        assertFalse(Safety.killActive(Boolean.FALSE, false));
+    }
+
+    @Test
+    void failOpenLogsAreRateLimited() {
+        Safety.resetCounters();
+        assertTrue(Safety.noteFailOpen());
+        for (int i = 0; i < 63; i++) assertFalse(Safety.noteFailOpen());
+        assertTrue(Safety.noteFailOpen());
+        assertEquals(65, Safety.failOpens());
+    }
+
+    @Test
+    void safetyCountersAreAtomic() throws Exception {
+        Safety.resetCounters();
+        int threads = 8;
+        int each = 1000;
+        Thread[] workers = new Thread[threads];
+        for (int i = 0; i < threads; i++) {
+            workers[i] = new Thread(() -> {
+                for (int n = 0; n < each; n++) Safety.noteRefusal();
+            });
+            workers[i].start();
+        }
+        for (Thread worker : workers) worker.join();
+        assertEquals((long) threads * each, Safety.parentRefusals());
+    }
+
+    @Test
     void nullShipDoesNotMatchARealShip() {
         assertFalse(Safety.sameKey(null, SHIP_A));
         assertFalse(Safety.sameKey(SHIP_A, null));

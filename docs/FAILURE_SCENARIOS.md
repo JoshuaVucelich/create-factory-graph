@@ -12,7 +12,7 @@ Cadence debt, dormant flags, and every cache live on the block entity or in stat
 
 **What goes wrong.** Aeronautics can park or freeze one member of a docked group while the rest keeps flying. A shaft, bearing, or gantry line often crosses that boundary. The old parent check sampled four members and, if they agreed, put every block entity on that ship gate. Relays, bearings, deployers, and belts then all followed `CHEAP`. The flying part stopped updating, or the frozen part later catch-up-burst, and the ship came apart.
 
-**What we do now.** `Safety.choose` parents a network only when every sample names the same ship. A ground block or a second ship key refuses the parent. Samples include both ends of the member list, not only a prefix. Networks larger than `safety.maxParentedMembers` (8192) are not parented, so a megabase is not walked into a ship gate. On every `setShipMode`, parented relays re-check the locator once. A relay that is no longer on that ship is ungated. The counter is `split-ungates`. Refusals increment `parent-refusals`.
+**What we do now.** `Safety.choose` parents a network only when every sample names the same ship. A ground block or a second ship key refuses the parent. Samples include both ends of the member list, not only a prefix. Networks larger than `safety.maxParentedMembers` (8192) are not parented, so a megabase is not walked into a ship gate. A mode change bumps that ship's own epoch, and parented relays on it re-check the locator once. A period or phase update does not. A relay that is no longer on that ship is ungated. The counter is `split-ungates`. Refusals increment `parent-refusals`. A relay with a pending speed or network update is not deferred; that uses the same quiet check as dormancy.
 
 Only decorative relays (exact class, same set the dormancy path already uses) receive a gate. Bearings, pistons, pulleys, elevators, deployers, mechanical arms, belt controllers, funnels, depots, and chutes do not.
 
@@ -46,7 +46,7 @@ If the stress hook throws, the network total is invalidated and Create's own `ca
 
 **What goes wrong.** Freezing physics on one ship in a group and then treating the group as a single `CHEAP` gate pauses the contraption that is still supposed to fly, or burst-ticks it when the freeze ends. Continuing to throttle item handlers on the parked ship and then repaying them duplicates items the moment the ship is woken.
 
-**What we do now.** A mode announcement bumps a ship epoch and marks graphs parented to that key dirty, so the next rebuild re-samples. Relays on the announced ship may still follow `SLOW`, `SLEEP`, or `BURST`. Contraptions on that ship keep Create's tick the whole time, including while the hull is `CHEAP`, so they stay with the ship instead of catching up later. If a parked contraption must also stop, stop it from the ship mod or flip `/factorygraph kill`. This mod will not skip it.
+**What we do now.** A mode change bumps that ship's epoch and marks graphs parented to that key dirty, so the next rebuild re-samples. Other ships keep their own count. Relays on the announced ship may still follow `SLOW`, `SLEEP`, or `BURST`. Contraptions on that ship keep Create's tick the whole time, including while the hull is `CHEAP`, so they stay with the ship instead of catching up later. If a parked contraption must also stop, stop it from the ship mod or flip `/factorygraph kill`. This mod will not skip it.
 
 ## 7. Lag spikes
 
@@ -64,7 +64,7 @@ If the stress hook throws, the network total is invalidated and Create's own `ca
 
 **What goes wrong.** The mixin config used to be required. A Create build whose private method moved crashed the dedicated server at startup. A hook that threw while cancelling a tick skipped the tick or took the server down with it.
 
-**What we do now.** `create_factory_graph.mixins.json` is `required: false`. If the targets do not match, Mixin logs the failure and Create runs stock. The ticker, belt backoff, stress totals, contraption replay, recipe lookup, depot funnel check, and chute insert check catch their own failures, leave Create's method running, and increment `fail-open`. The kill switch forces the same outcome on purpose.
+**What we do now.** `create_factory_graph.mixins.json` is `required: false`. If the targets do not match, Mixin logs the failure and Create runs stock. The ticker, belt backoff, stress totals, contraption replay, recipe lookup, depot funnel check, and chute insert check catch their own failures, leave Create's method running, and increment `fail-open`. Those failure logs are rate-limited. Casts outside mixin methods check that the accessor applied and skip the operation, so a partly applied set does not throw. The kill switch forces the same outcome on purpose. Chunk unload drops neighbour entries and logistics behaviour entries for that chunk only.
 
 ## Kill switch
 
@@ -76,8 +76,8 @@ If the stress hook throws, the network total is invalidated and Create's own `ca
 - neighbour, stress, logistics, recipe, train-position, and contraption-shape caches are cleared
 - no chunk is written
 
-`/factorygraph unkill` clears the runtime override. If the config file still says `killSwitch = true`, the switch stays on until that line is false. `/factorygraph disable` still wakes dormant relays. It does not by itself clear the kill switch.
+`/factorygraph unkill` stores null. Kill stays active when the runtime override is true or `safety.killSwitch` is true. A runtime false does not turn the config off. If the config file still says `killSwitch = true`, the switch stays on until that line is false. `/factorygraph disable` still wakes dormant relays. It does not by itself clear the kill switch.
 
 ## Tests
 
-`src/test/java/.../SafetyTest.java` covers the pure rules: unanimous ship parents, a split or a ground mix refuses, an oversized network refuses, samples include both ends, only relays defer, machine and belt debt replays zero ticks, a failed hook does not skip the original tick, and cadence state is not persisted. `./gradlew test` runs them. They do not start a Minecraft server. An in-game check still has to put a bearing and a belt on a ship, freeze one member of the group, and confirm the bearing keeps turning and the belt items do not jump.
+`src/test/java/.../SafetyTest.java` covers the pure rules: unanimous ship parents, a split or a ground mix refuses, an oversized network refuses, samples include both ends, only relays defer, machine and belt debt replays zero ticks, a failed hook does not skip the original tick, cadence state is not persisted, a runtime false does not mask `safety.killSwitch`, fail-open logs stay rate-limited, and the counters stay exact under concurrent increments. `ShipGateTest` checks that a mode change bumps only that ship's epoch. `./gradlew test` runs them. They do not start a Minecraft server. An in-game check still has to put a bearing and a belt on a ship, freeze one member of the group, and confirm the bearing keeps turning and the belt items do not jump.

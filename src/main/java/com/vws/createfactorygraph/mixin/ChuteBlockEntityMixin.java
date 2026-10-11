@@ -8,6 +8,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import com.simibubi.create.content.logistics.chute.ChuteBlockEntity;
+import com.vws.createfactorygraph.CreateFactoryGraph;
 import com.vws.createfactorygraph.logistics.LogisticsCache;
 import com.vws.createfactorygraph.profile.AreaProfiler;
 import com.vws.createfactorygraph.safety.Safety;
@@ -32,7 +33,7 @@ public abstract class ChuteBlockEntityMixin {
             Boolean cached = LogisticsCache.chuteInsert((ChuteBlockEntity) (Object) this, getItemMotion() > 0);
             if (cached != null) cir.setReturnValue(cached);
         } catch (Throwable t) {
-            Safety.noteFailOpen();
+            if (Safety.noteFailOpen()) CreateFactoryGraph.LOGGER.warn("chute insert cache failed open: {}", t.toString());
         }
     }
 

@@ -14,6 +14,7 @@ import com.simibubi.create.content.kinetics.simpleRelays.SimpleKineticBlockEntit
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
 import com.simibubi.create.foundation.blockEntity.behaviour.inventory.VersionedInventoryTrackerBehaviour;
 import com.vws.createfactorygraph.FGConfig;
+import com.vws.createfactorygraph.safety.Safety;
 import com.vws.createfactorygraph.mixin.accessor.BeltBlockEntityAccessor;
 import com.vws.createfactorygraph.mixin.accessor.KineticBlockEntityAccessor;
 import com.vws.createfactorygraph.mixin.accessor.KineticEffectHandlerAccessor;
@@ -68,18 +69,35 @@ public final class DecorativePolicy {
             if (!FGConfig.dormantRelays()) return false;
         } else if (kind == BELT_SEGMENT) {
             if (!FGConfig.dormantBeltSegments()) return false;
-            BeltBlockEntity belt = (BeltBlockEntity) be;
+            if (!(be instanceof BeltBlockEntity belt)) return false;
             if (belt.isController() || belt.beltLength == 0) return false;
-            if (((BeltBlockEntityAccessor) belt).cfg$getItemHandler() == null) return false;
+            if (!(belt instanceof BeltBlockEntityAccessor beltAcc)) {
+                Safety.noteFailOpen();
+                return false;
+            }
+            if (beltAcc.cfg$getItemHandler() == null) return false;
         } else {
             return false;
         }
         if (be.isVirtual() || be.isRemoved()) return false;
-        if (!((SmartBlockEntityAccessor) be).cfg$isInitialized()) return false;
+        if (!(be instanceof SmartBlockEntityAccessor smart)) {
+            Safety.noteFailOpen();
+            return false;
+        }
+        if (!smart.cfg$isInitialized()) return false;
         if (be.needsSpeedUpdate() || be.networkDirty) return false;
         if (be.getFlickerScore() > 0) return false;
-        KineticBlockEntityAccessor acc = (KineticBlockEntityAccessor) be;
-        if (((KineticEffectHandlerAccessor) acc.cfg$getEffects()).cfg$getParticleSpawnCountdown() > 0) return false;
+        if (!(be instanceof KineticBlockEntityAccessor acc)) {
+            Safety.noteFailOpen();
+            return false;
+        }
+        Object effects = acc.cfg$getEffects();
+        if (effects == null) return false;
+        if (!(effects instanceof KineticEffectHandlerAccessor handler)) {
+            Safety.noteFailOpen();
+            return false;
+        }
+        if (handler.cfg$getParticleSpawnCountdown() > 0) return false;
         return true;
     }
 

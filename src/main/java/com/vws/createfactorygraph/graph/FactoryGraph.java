@@ -12,6 +12,7 @@ import com.simibubi.create.content.kinetics.belt.transport.BeltInventory;
 import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 import com.vws.createfactorygraph.FGConfig;
 import com.vws.createfactorygraph.hooks.DecorativePolicy;
+import com.vws.createfactorygraph.safety.Safety;
 import com.vws.createfactorygraph.hooks.KineticNodeDuck;
 import com.vws.createfactorygraph.mixin.accessor.KineticNetworkAccessor;
 import com.vws.createfactorygraph.mixin.accessor.RotationPropagatorInvoker;
@@ -52,7 +53,11 @@ public final class FactoryGraph {
     public static NodeKind classify(KineticBlockEntity be) {
         if (be.isSource()) return NodeKind.SOURCE;
         if (be instanceof BeltBlockEntity belt) return belt.isController() ? NodeKind.BELT_CONTROLLER : NodeKind.BELT_SEGMENT;
-        byte c = ((KineticNodeDuck) be).cfg$candidate();
+        if (!(be instanceof KineticNodeDuck duck)) {
+            Safety.noteFailOpen();
+            return NodeKind.MACHINE;
+        }
+        byte c = duck.cfg$candidate();
         if (c == DecorativePolicy.UNKNOWN) c = DecorativePolicy.classify(be);
         return c == DecorativePolicy.RELAY ? NodeKind.RELAY : NodeKind.MACHINE;
     }
@@ -64,9 +69,14 @@ public final class FactoryGraph {
         edges.clear();
         kindCounts.clear();
         edgesSkipped = false;
-        KineticNetworkAccessor acc = (KineticNetworkAccessor) network;
-        networkStress = acc.cfg$getCurrentStress();
-        networkCapacity = acc.cfg$getCurrentCapacity();
+        if (network instanceof KineticNetworkAccessor acc) {
+            networkStress = acc.cfg$getCurrentStress();
+            networkCapacity = acc.cfg$getCurrentCapacity();
+        } else {
+            Safety.noteFailOpen();
+            networkStress = 0;
+            networkCapacity = 0;
+        }
 
         for (Map.Entry<KineticBlockEntity, Float> e : network.members.entrySet()) {
             KineticBlockEntity be = e.getKey();
@@ -78,9 +88,10 @@ public final class FactoryGraph {
             n.stressImpact = e.getValue() == null ? 0 : e.getValue();
             Float cap = network.sources.get(be);
             n.capacity = cap == null ? 0 : cap;
-            n.dormant = ((KineticNodeDuck) be).cfg$isDormant();
-            if (kind == NodeKind.BELT_CONTROLLER) {
-                BeltInventory inv = ((BeltBlockEntity) be).getInventory();
+            if (be instanceof KineticNodeDuck duck) n.dormant = duck.cfg$isDormant();
+            else Safety.noteFailOpen();
+            if (kind == NodeKind.BELT_CONTROLLER && be instanceof BeltBlockEntity belt) {
+                BeltInventory inv = belt.getInventory();
                 n.inventoryItems = 0;
                 if (inv != null) inv.getTransportedItems().forEach(t -> n.inventoryItems += t.stack.getCount());
             }
@@ -93,7 +104,15 @@ public final class FactoryGraph {
                 KineticBlockEntity be = e.getKey();
                 if (be.isRemoved() || be.getLevel() != level) continue;
                 long a = be.getBlockPos().asLong();
-                List<KineticBlockEntity> nbs = RotationPropagatorInvoker.cfg$getConnectedNeighbours(be);
+                List<KineticBlockEntity> nbs;
+                try {
+                    nbs = RotationPropagatorInvoker.cfg$getConnectedNeighbours(be);
+                } catch (Throwable t) {
+                    Safety.noteFailOpen();
+                    edgesSkipped = true;
+                    break;
+                }
+                if (nbs == null) continue;
                 for (KineticBlockEntity nb : nbs) {
                     long b = nb.getBlockPos().asLong();
                     if (a < b && nodes.containsKey(b)) {

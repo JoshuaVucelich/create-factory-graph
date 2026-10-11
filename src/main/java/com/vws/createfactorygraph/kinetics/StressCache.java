@@ -6,6 +6,7 @@ import com.simibubi.create.content.kinetics.KineticNetwork;
 import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
 import com.vws.createfactorygraph.FGConfig;
 import com.vws.createfactorygraph.profile.AreaProfiler;
+import com.vws.createfactorygraph.safety.Safety;
 
 /**
  * Incremental stress and capacity totals. The stored total is whatever Create's full
@@ -188,8 +189,13 @@ public final class StressCache {
 
     private static KineticNetwork networkOf(KineticBlockEntity be) {
         if (!(be.getLevel() instanceof net.minecraft.world.level.LevelAccessor level) || be.network == null) return null;
-        var nets = com.vws.createfactorygraph.mixin.accessor.TorquePropagatorAccessor.cfg$getNetworks().get(level);
-        return nets == null ? null : nets.get(be.network);
+        try {
+            var nets = com.vws.createfactorygraph.mixin.accessor.TorquePropagatorAccessor.cfg$getNetworks().get(level);
+            return nets == null ? null : nets.get(be.network);
+        } catch (Throwable t) {
+            Safety.noteFailOpen();
+            return null;
+        }
     }
 
     private static Slot slot(KineticNetwork network) {

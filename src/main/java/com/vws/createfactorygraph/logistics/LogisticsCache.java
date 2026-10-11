@@ -27,7 +27,8 @@ import net.minecraft.world.level.block.state.BlockState;
  */
 public final class LogisticsCache {
     private static final IdentityHashMap<Level, Long2ObjectOpenHashMap<Seg>> SEGMENTS = new IdentityHashMap<>();
-    private static final IdentityHashMap<Level, Long2ObjectOpenHashMap<Beh>> BEHAVIOURS = new IdentityHashMap<>();
+    /** Level, then chunk long, then the xored behaviour key. Eviction drops one chunk. */
+    private static final IdentityHashMap<Level, Long2ObjectOpenHashMap<Long2ObjectOpenHashMap<Beh>>> BEHAVIOURS = new IdentityHashMap<>();
     private static final IdentityHashMap<Level, Long2ObjectOpenHashMap<Bool>> FUNNEL_ABOVE = new IdentityHashMap<>();
     private static long seenEpoch = Long.MIN_VALUE;
 
@@ -104,7 +105,9 @@ public final class LogisticsCache {
         if (!(level instanceof Level lvl) || lvl.isClientSide || !active()) return BlockEntityBehaviour.get(level, pos, type);
         rollEpoch();
         long key = pos.asLong() ^ (type.hashCode() * 0x9E3779B97F4A7C15L);
-        Long2ObjectOpenHashMap<Beh> map = BEHAVIOURS.computeIfAbsent(lvl, l -> new Long2ObjectOpenHashMap<>());
+        long chunk = ChunkPos.asLong(pos.getX() >> 4, pos.getZ() >> 4);
+        Long2ObjectOpenHashMap<Beh> map = BEHAVIOURS.computeIfAbsent(lvl, l -> new Long2ObjectOpenHashMap<>())
+                .computeIfAbsent(chunk, c -> new Long2ObjectOpenHashMap<>());
         Beh hit = map.get(key);
         long epoch = WorldEpoch.get();
         if (hit != null && hit.epoch == epoch && hit.type == type) {
@@ -183,12 +186,16 @@ public final class LogisticsCache {
         seenEpoch = Long.MIN_VALUE;
     }
 
-    /** Drop lookups whose block sits in this chunk. Behaviour keys are not plain positions, so that map is dropped for the level. */
+    /** Drop lookups whose block sits in this chunk. Other chunks of the same level stay. */
     public static void evictChunk(Level level, ChunkPos pos) {
         if (level == null || pos == null) return;
         evictPositions(SEGMENTS.get(level), pos);
         evictPositions(FUNNEL_ABOVE.get(level), pos);
-        BEHAVIOURS.remove(level);
+        Long2ObjectOpenHashMap<Long2ObjectOpenHashMap<Beh>> behaviours = BEHAVIOURS.get(level);
+        if (behaviours != null) {
+            behaviours.remove(pos.toLong());
+            if (behaviours.isEmpty()) BEHAVIOURS.remove(level);
+        }
         CHUTES.entrySet().removeIf(e -> {
             ChuteBlockEntity chute = e.getKey();
             return chute.isRemoved() || (chute.getLevel() == level && inChunk(chute.getBlockPos(), pos));

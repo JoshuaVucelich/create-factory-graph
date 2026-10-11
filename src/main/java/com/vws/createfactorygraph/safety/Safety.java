@@ -1,5 +1,7 @@
 package com.vws.createfactorygraph.safety;
 
+import java.util.concurrent.atomic.AtomicLong;
+
 /**
  * Pure decisions for the hardening pass. No Minecraft types, so the rules can be unit-tested
  * without a server. Cadence debt and cache contents are never written to disk
@@ -29,21 +31,41 @@ public final class Safety {
         public static ParentChoice parent(Object ship) { return new ParentChoice(Parenting.PARENT, ship); }
     }
 
-    public static long failOpens;
-    public static long splitUngates;
-    public static long forfeitedUnsafeDebt;
-    public static long parentRefusals;
+    private static final AtomicLong FAIL_OPENS = new AtomicLong();
+    private static final AtomicLong SPLIT_UNGATES = new AtomicLong();
+    private static final AtomicLong FORFEITED_UNSAFE_DEBT = new AtomicLong();
+    private static final AtomicLong PARENT_REFUSALS = new AtomicLong();
 
-    public static void noteFailOpen() { failOpens++; }
-    public static void noteSplit() { splitUngates++; }
-    public static void noteForfeit(int ticks) { if (ticks > 0) forfeitedUnsafeDebt += ticks; }
-    public static void noteRefusal() { parentRefusals++; }
+    public static long failOpens() { return FAIL_OPENS.get(); }
+    public static long splitUngates() { return SPLIT_UNGATES.get(); }
+    public static long forfeitedUnsafeDebt() { return FORFEITED_UNSAFE_DEBT.get(); }
+    public static long parentRefusals() { return PARENT_REFUSALS.get(); }
+
+    /**
+     * Config kill stays on unless the runtime override is explicitly true-or-absent.
+     * A runtime {@code false} must not mask {@code safety.killSwitch = true}.
+     * {@code /factorygraph unkill} stores null so this method follows the config again.
+     */
+    public static boolean killActive(Boolean runtime, boolean configOn) {
+        if (Boolean.TRUE.equals(runtime)) return true;
+        return configOn;
+    }
+
+    /** True on the first failure and every 64th after that, so a hot hook cannot flood the log. */
+    public static boolean noteFailOpen() {
+        long n = FAIL_OPENS.incrementAndGet();
+        return (n & 63L) == 1L;
+    }
+
+    public static void noteSplit() { SPLIT_UNGATES.incrementAndGet(); }
+    public static void noteForfeit(int ticks) { if (ticks > 0) FORFEITED_UNSAFE_DEBT.addAndGet(ticks); }
+    public static void noteRefusal() { PARENT_REFUSALS.incrementAndGet(); }
 
     public static void resetCounters() {
-        failOpens = 0;
-        splitUngates = 0;
-        forfeitedUnsafeDebt = 0;
-        parentRefusals = 0;
+        FAIL_OPENS.set(0);
+        SPLIT_UNGATES.set(0);
+        FORFEITED_UNSAFE_DEBT.set(0);
+        PARENT_REFUSALS.set(0);
     }
 
     /** True when both sides name the same ship. Null never matches a ship. */

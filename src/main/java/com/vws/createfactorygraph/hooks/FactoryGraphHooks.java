@@ -4,6 +4,7 @@ import com.simibubi.create.content.kinetics.KineticNetwork;
 import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
 import com.vws.createfactorygraph.FGConfig;
 import com.vws.createfactorygraph.graph.FactoryGraphManager;
+import com.vws.createfactorygraph.safety.Safety;
 
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
@@ -15,7 +16,10 @@ public final class FactoryGraphHooks {
     /** End of KineticBlockEntity.tick() on the server: count quiet ticks, queue for dormancy. */
     public static void afterKineticTick(KineticBlockEntity be) {
         if (!(be.getLevel() instanceof ServerLevel sl) || !FGConfig.enabled()) return;
-        KineticNodeDuck duck = (KineticNodeDuck) be;
+        if (!(be instanceof KineticNodeDuck duck)) {
+            Safety.noteFailOpen();
+            return;
+        }
         byte cand = duck.cfg$candidate();
         if (cand == DecorativePolicy.UNKNOWN) {
             cand = DecorativePolicy.classify(be);
@@ -42,7 +46,10 @@ public final class FactoryGraphHooks {
     public static void touch(KineticBlockEntity be) {
         Level level = be.getLevel();
         if (!(level instanceof ServerLevel sl)) return;
-        KineticNodeDuck duck = (KineticNodeDuck) be;
+        if (!(be instanceof KineticNodeDuck duck)) {
+            Safety.noteFailOpen();
+            return;
+        }
         duck.cfg$setQuietTicks(0);
         if (duck.cfg$isDormant()) FactoryGraphManager.get(sl).wake(be, "state");
     }
@@ -80,7 +87,7 @@ public final class FactoryGraphHooks {
     /** LevelChunk.updateBlockEntityTicker() ran for this BE: it is ticking again. */
     public static void tickerRebound(BlockEntity be) {
         if (be instanceof KineticBlockEntity kbe && be.getLevel() instanceof ServerLevel sl
-                && ((KineticNodeDuck) kbe).cfg$isDormant()) {
+                && kbe instanceof KineticNodeDuck duck && duck.cfg$isDormant()) {
             FactoryGraphManager.get(sl).forgetDormant(kbe);
         }
     }

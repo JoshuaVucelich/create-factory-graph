@@ -32,8 +32,9 @@ public final class ShipCadenceGate {
         try {
             return beforeTick0(level, be, duck);
         } catch (Throwable t) {
-            Safety.noteFailOpen();
-            CreateFactoryGraph.LOGGER.warn("cadence gate failed open at {}: {}", be.getBlockPos(), t.toString());
+            if (Safety.noteFailOpen()) {
+                CreateFactoryGraph.LOGGER.warn("cadence gate failed open at {}: {}", be.getBlockPos(), t.toString());
+            }
             dropGate(duck);
             return false;
         }
@@ -47,8 +48,8 @@ public final class ShipCadenceGate {
         }
         ShipGate gate = duck.cfg$gate();
         if (gate == null) return false;
-        if (FactoryCadence.hasLocator() && duck.cfg$seenEpoch() != FactoryCadence.shipEpoch()) {
-            duck.cfg$setSeenEpoch(FactoryCadence.shipEpoch());
+        if (FactoryCadence.hasLocator() && duck.cfg$seenEpoch() != gate.epoch) {
+            duck.cfg$setSeenEpoch(gate.epoch);
             Object here = FactoryCadence.locateShip(level, be.getBlockPos().asLong());
             if (!Safety.sameKey(gate.key, here)) {
                 Safety.noteSplit();
@@ -56,6 +57,7 @@ public final class ShipCadenceGate {
                 return false;
             }
         }
+        if (!(be instanceof KineticBlockEntity kinetic) || !DecorativePolicy.isQuiet(kinetic, kind)) return false;
         int debt = duck.cfg$debt();
         if (gate.mode == FactoryCadence.Mode.CHEAP && settled(level, gate)) {
             FGConfig.CheapPolicy policy = FGConfig.cheapPolicy();
@@ -84,8 +86,11 @@ public final class ShipCadenceGate {
     }
 
     private static byte kindOf(SmartBlockEntity be) {
-        if (!(be instanceof KineticBlockEntity kinetic)) return DecorativePolicy.NEVER;
-        KineticNodeDuck node = (KineticNodeDuck) kinetic;
+        if (!(be instanceof KineticBlockEntity kinetic) || !(kinetic instanceof KineticNodeDuck node)) {
+            if (!(be instanceof KineticBlockEntity)) return DecorativePolicy.NEVER;
+            Safety.noteFailOpen();
+            return DecorativePolicy.NEVER;
+        }
         byte kind = node.cfg$candidate();
         if (kind == DecorativePolicy.UNKNOWN) {
             kind = DecorativePolicy.classify(kinetic);
@@ -132,8 +137,9 @@ public final class ShipCadenceGate {
                 be.tick();
             }
         } catch (Throwable t) {
-            Safety.noteFailOpen();
-            CreateFactoryGraph.LOGGER.warn("cadence catch-up failed open at {} ({}); dropping its debt", be.getBlockPos(), t.toString());
+            if (Safety.noteFailOpen()) {
+                CreateFactoryGraph.LOGGER.warn("cadence catch-up failed open at {} ({}); dropping its debt", be.getBlockPos(), t.toString());
+            }
             duck.cfg$setDebt(0);
             gate.catchUpTicks += done;
             gate.ranTicks += done;

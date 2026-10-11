@@ -90,7 +90,7 @@ public final class FactoryGraphCommand {
                 "safety: caches neighbours=%s stress=%s logistics=%s recipe=%s trainPosition=%s contraptionShapes=%s | machines/belts/contraptions/trains not throttled | fail-open=%d split-ungates=%d unsafe-debt-forfeited=%d parent-refusals=%d catch-up-budget=%d | cadence and caches are not saved",
                 on(FGConfig.neighbourCache()), on(FGConfig.stressCache()), on(FGConfig.logisticsCache()),
                 on(FGConfig.recipeCache()), on(FGConfig.trainPositionCache()), on(FGConfig.contraptionShapeCache()),
-                Safety.failOpens, Safety.splitUngates, Safety.forfeitedUnsafeDebt, Safety.parentRefusals,
+                Safety.failOpens(), Safety.splitUngates(), Safety.forfeitedUnsafeDebt(), Safety.parentRefusals(),
                 ShipCadenceGate.budgetRemaining()));
         for (FactoryGraphManager m : FactoryGraphManager.all()) {
             say(c, String.format(
@@ -111,9 +111,9 @@ public final class FactoryGraphCommand {
     }
 
     private static int unkill(CommandContext<CommandSourceStack> c) {
-        FGConfig.runtimeKillSwitch = false;
+        FGConfig.runtimeKillSwitch = null;
         for (FactoryGraphManager m : FactoryGraphManager.all()) m.markAllKnownDirty();
-        return say(c, "kill switch off (config file still applies if safety.killSwitch is true). Networks marked for rebuild.");
+        return say(c, "runtime kill override cleared. safety.killSwitch in the config still applies. Networks marked for rebuild.");
     }
 
     private static int setEnabled(CommandContext<CommandSourceStack> c, boolean on) {
@@ -154,7 +154,9 @@ public final class FactoryGraphCommand {
         if (!(level.getBlockEntity(pos) instanceof KineticBlockEntity be)) {
             return say(c, "not a Create kinetic block entity at " + pos.toShortString());
         }
-        KineticNodeDuck duck = (KineticNodeDuck) be;
+        if (!(be instanceof KineticNodeDuck duck)) {
+            return say(c, "kinetic mixin not applied at " + pos.toShortString());
+        }
         say(c, String.format("%s %s speed=%.1f network=%s dormant=%s quietTicks=%d candidate=%d",
                 pos.toShortString(), FactoryGraph.classify(be), be.getSpeed(), be.network, duck.cfg$isDormant(),
                 duck.cfg$quietTicks(), duck.cfg$candidate()));
@@ -249,7 +251,7 @@ public final class FactoryGraphCommand {
     private static int cadenceInspect(CommandContext<CommandSourceStack> c) throws com.mojang.brigadier.exceptions.CommandSyntaxException {
         BlockPos pos = BlockPosArgument.getLoadedBlockPos(c, "pos");
         if (!(c.getSource().getLevel().getBlockEntity(pos) instanceof SmartBlockEntity be)) return say(c, "no Create smart BE at " + pos.toShortString());
-        CadenceDuck d = (CadenceDuck) be;
+        if (!(be instanceof CadenceDuck d)) return say(c, "cadence mixin not applied at " + pos.toShortString());
         ShipGate g = d.cfg$gate();
         Object located = FactoryCadence.locateShip(c.getSource().getLevel(), pos.asLong());
         return say(c, pos.toShortString() + " gate=" + (g == null ? "none (ground)" : g.key + " " + g.mode) + " debt=" + d.cfg$debt() + " locator=" + located);

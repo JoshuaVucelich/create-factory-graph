@@ -130,7 +130,7 @@ Java 21.
 ./gradlew build
 ```
 
-Jar: `build/libs/create_factory_graph-1.1.0-hardening.jar`
+Jar: `build/libs/create_factory_graph-1.1.1-hardening.jar`
 
 ## Pins
 

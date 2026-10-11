@@ -129,7 +129,8 @@ public final class FactoryGraphManager {
         // 1. sleep settled nodes (deferred so we never touch the ticker list mid-iteration)
         if (!sleepQueue.isEmpty()) {
             for (KineticBlockEntity be : sleepQueue) {
-                KineticNodeDuck duck = (KineticNodeDuck) be;
+                KineticNodeDuck duck = node(be);
+                if (duck == null) continue;
                 duck.cfg$setQueued(false);
                 if (duck.cfg$isDormant()) continue;
                 byte cand = duck.cfg$candidate();
@@ -153,7 +154,8 @@ public final class FactoryGraphManager {
                 }
                 if (validate) {
                     validations++;
-                    ((KineticBlockEntityAccessor) be).cfg$validateKinetics();
+                    if (be instanceof KineticBlockEntityAccessor acc) acc.cfg$validateKinetics();
+                    else Safety.noteFailOpen();
                 }
             }
         }
@@ -161,7 +163,7 @@ public final class FactoryGraphManager {
 
         // 3. rebuild dirty graphs (bounded)
         if (!dirty.isEmpty()) {
-            Map<Long, KineticNetwork> nets = TorquePropagatorAccessor.cfg$getNetworks().get(level);
+            Map<Long, KineticNetwork> nets = networks();
             int budget = FGConfig.maxRebuildsPerTick();
             LongIterator it = dirty.iterator();
             while (it.hasNext() && budget-- > 0) {
@@ -185,7 +187,13 @@ public final class FactoryGraphManager {
         }
 
         // 4. prune jam set occasionally
-        if ((tickCounter & 255) == 0) jammedBelts.removeIf(inv -> ((BeltInventoryAccessor) inv).cfg$getBelt().isRemoved());
+        if ((tickCounter & 255) == 0) jammedBelts.removeIf(inv -> {
+            if (!(inv instanceof BeltInventoryAccessor acc)) {
+                Safety.noteFailOpen();
+                return true;
+            }
+            return acc.cfg$getBelt().isRemoved();
+        });
     }
 
     /**
@@ -248,7 +256,7 @@ public final class FactoryGraphManager {
      */
     public void disarm() {
         wakeAll("disarm");
-        Map<Long, KineticNetwork> nets = TorquePropagatorAccessor.cfg$getNetworks().get(level);
+        Map<Long, KineticNetwork> nets = networks();
         if (nets != null) {
             for (KineticNetwork net : nets.values()) {
                 for (KineticBlockEntity be : net.members.keySet()) setGate(be, null);
@@ -267,8 +275,31 @@ public final class FactoryGraphManager {
         jammedBelts.clear();
     }
 
+    private static KineticNodeDuck node(KineticBlockEntity be) {
+        if (be instanceof KineticNodeDuck duck) return duck;
+        Safety.noteFailOpen();
+        return null;
+    }
+
+    private static CadenceDuck cadence(SmartBlockEntity be) {
+        if (be instanceof CadenceDuck duck) return duck;
+        Safety.noteFailOpen();
+        return null;
+    }
+
+    /** Null when the torque-propagator accessor did not apply. Does not remove tickers. */
+    private Map<Long, KineticNetwork> networks() {
+        try {
+            return TorquePropagatorAccessor.cfg$getNetworks().get(level);
+        } catch (Throwable t) {
+            Safety.noteFailOpen();
+            return null;
+        }
+    }
+
     private static boolean isRelay(KineticBlockEntity be) {
-        KineticNodeDuck duck = (KineticNodeDuck) be;
+        KineticNodeDuck duck = node(be);
+        if (duck == null) return false;
         byte kind = duck.cfg$candidate();
         if (kind == DecorativePolicy.UNKNOWN) {
             kind = DecorativePolicy.classify(be);
@@ -278,8 +309,8 @@ public final class FactoryGraphManager {
     }
 
     private static void setGate(SmartBlockEntity be, ShipGate gate) {
-        CadenceDuck d = (CadenceDuck) be;
-        if (d.cfg$gate() == gate) return;
+        CadenceDuck d = cadence(be);
+        if (d == null || d.cfg$gate() == gate) return;
         if (gate == null) {
             Safety.noteForfeit(d.cfg$debt());
             d.cfg$setDebt(0);
@@ -292,8 +323,12 @@ public final class FactoryGraphManager {
         BlockPos pos = be.getBlockPos();
         LevelChunk chunk = level.getChunkSource().getChunkNow(SectionPos.blockToSectionCoord(pos.getX()), SectionPos.blockToSectionCoord(pos.getZ()));
         if (chunk == null) return;
-        ((LevelChunkInvoker) chunk).cfg$removeBlockEntityTicker(pos);
-        ((KineticNodeDuck) be).cfg$setDormant(true);
+        if (!(chunk instanceof LevelChunkInvoker invoker) || !(be instanceof KineticNodeDuck duck)) {
+            Safety.noteFailOpen();
+            return;
+        }
+        invoker.cfg$removeBlockEntityTicker(pos);
+        duck.cfg$setDormant(true);
         bucketFor(be).add(be);
         dormantCount++;
         sleeps++;
@@ -306,8 +341,8 @@ public final class FactoryGraphManager {
 
     /** Put the BE back on the ticker list. */
     public void wake(KineticBlockEntity be, String reason) {
-        KineticNodeDuck duck = (KineticNodeDuck) be;
-        if (!duck.cfg$isDormant()) return;
+        KineticNodeDuck duck = node(be);
+        if (duck == null || !duck.cfg$isDormant()) return;
         drop(be);
         duck.cfg$setQuietTicks(0);
         duck.cfg$setCandidate(DecorativePolicy.UNKNOWN);
@@ -317,7 +352,11 @@ public final class FactoryGraphManager {
         LevelChunk chunk = level.getChunkSource().getChunkNow(SectionPos.blockToSectionCoord(pos.getX()), SectionPos.blockToSectionCoord(pos.getZ()));
         if (chunk == null) return; // unloading: the chunk rebuilds its tickers when it loads again
         if (chunk.getBlockEntities().get(pos) != be) return;
-        ((LevelChunkInvoker) chunk).cfg$updateBlockEntityTicker(be);
+        if (!(chunk instanceof LevelChunkInvoker invoker)) {
+            Safety.noteFailOpen();
+            return;
+        }
+        invoker.cfg$updateBlockEntityTicker(be);
         FactoryGraph g = be.network == null ? null : graphs.get(be.network.longValue());
         if (g != null) {
             GraphNode n = g.nodes.get(pos.asLong());
@@ -327,15 +366,16 @@ public final class FactoryGraphManager {
 
     /** BE removed/unloaded or vanilla already re-registered its ticker. */
     public void forgetDormant(KineticBlockEntity be) {
-        KineticNodeDuck duck = (KineticNodeDuck) be;
-        if (!duck.cfg$isDormant()) return;
+        KineticNodeDuck duck = node(be);
+        if (duck == null || !duck.cfg$isDormant()) return;
         drop(be);
         duck.cfg$setQuietTicks(0);
         rebounds++;
     }
 
     private void drop(KineticBlockEntity be) {
-        ((KineticNodeDuck) be).cfg$setDormant(false);
+        if (be instanceof KineticNodeDuck duck) duck.cfg$setDormant(false);
+        else Safety.noteFailOpen();
         if (bucketFor(be).remove(be)) dormantCount--;
         else {
             for (ReferenceOpenHashSet<KineticBlockEntity> b : buckets) {
@@ -351,12 +391,15 @@ public final class FactoryGraphManager {
         List<KineticBlockEntity> all = new ArrayList<>();
         for (ReferenceOpenHashSet<KineticBlockEntity> b : buckets) all.addAll(b);
         for (KineticBlockEntity be : all) wake(be, reason);
-        for (KineticBlockEntity be : sleepQueue) ((KineticNodeDuck) be).cfg$setQueued(false);
+        for (KineticBlockEntity be : sleepQueue) {
+            if (be instanceof KineticNodeDuck duck) duck.cfg$setQueued(false);
+            else Safety.noteFailOpen();
+        }
         sleepQueue.clear();
     }
 
     public void markAllKnownDirty() {
-        Map<Long, KineticNetwork> nets = TorquePropagatorAccessor.cfg$getNetworks().get(level);
+        Map<Long, KineticNetwork> nets = networks();
         if (nets != null) nets.keySet().forEach(id -> dirty.add(id.longValue()));
     }
 
@@ -379,11 +422,15 @@ public final class FactoryGraphManager {
     /** Level unload / server stop: forget flags only (never re-register tickers while unloading). */
     private void clear() {
         for (ReferenceOpenHashSet<KineticBlockEntity> b : buckets) {
-            for (KineticBlockEntity be : b) ((KineticNodeDuck) be).cfg$setDormant(false);
+            for (KineticBlockEntity be : b) {
+                if (be instanceof KineticNodeDuck duck) duck.cfg$setDormant(false);
+            }
             b.clear();
         }
         dormantCount = 0;
-        for (KineticBlockEntity be : sleepQueue) ((KineticNodeDuck) be).cfg$setQueued(false);
+        for (KineticBlockEntity be : sleepQueue) {
+            if (be instanceof KineticNodeDuck duck) duck.cfg$setQueued(false);
+        }
         sleepQueue.clear();
         graphs.clear();
         dirty.clear();

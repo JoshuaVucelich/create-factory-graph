@@ -33,8 +33,6 @@ public final class FactoryCadence {
     private static final Map<Object, ShipGate> GATES = new ConcurrentHashMap<>();
     private static final CopyOnWriteArrayList<BiConsumer<Object, Mode>> LISTENERS = new CopyOnWriteArrayList<>();
     private static volatile BiFunction<Object, Long, Object> locator;
-    /** Bumped on every mode announcement so parented relays re-check the locator once. */
-    private static volatile int modeEpoch;
 
     // diagnostics
     public static volatile long eventsReceived, cheapEvents, rebuildingEvents, fullEvents;
@@ -49,17 +47,12 @@ public final class FactoryCadence {
         setShipMode(shipKey, mode, -1, -1);
     }
 
-    public static int shipEpoch() {
-        return modeEpoch;
-    }
-
     /**
      * @param shipKey opaque ship identity (Aeronautics: SubLevel UUID)
      * @param periodTicks hull cadence in ticks while CHEAP (e.g. 2 = 10 Hz), -1 = unknown
      * @param phase tick phase of the hull step: hull steps when gameTime % period == phase, -1 = unknown
      */
     public static void setShipMode(Object shipKey, Mode mode, int periodTicks, int phase) {
-        modeEpoch++;
         if (shipKey == null || mode == null) return;
         ShipGate gate = GATES.computeIfAbsent(shipKey, ShipGate::new);
         Mode prev = gate.mode;
@@ -128,7 +121,6 @@ public final class FactoryCadence {
     /** Server stop: forget gates (ship mod re-announces modes on next start). Locator stays. */
     public static void reset() {
         GATES.clear();
-        modeEpoch++;
         synchronized (RECENT) { RECENT.clear(); }
     }
 

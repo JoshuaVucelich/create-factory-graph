@@ -65,8 +65,7 @@ public abstract class BeltInventoryMixin {
         try {
             cfg$head0(ci);
         } catch (Throwable t) {
-            Safety.noteFailOpen();
-            CreateFactoryGraph.LOGGER.warn("belt backoff failed open: {}", t.toString());
+            if (Safety.noteFailOpen()) CreateFactoryGraph.LOGGER.warn("belt backoff failed open: {}", t.toString());
         }
     }
 
