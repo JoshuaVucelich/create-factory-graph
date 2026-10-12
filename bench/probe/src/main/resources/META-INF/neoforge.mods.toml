@@ -1,0 +1,34 @@
+modLoader = "javafml"
+loaderVersion = "[4,)"
+license = "CC0-1.0"
+
+[[mods]]
+modId = "benchprobe"
+version = "1.0.0"
+displayName = "Factory Graph Bench Probe"
+description = "Headless measurement probe for the factory-graph benchmark. Not a gameplay mod."
+authors = "Joshua Vucelich"
+
+[[mixins]]
+config = "benchprobe.mixins.json"
+
+[[dependencies.benchprobe]]
+modId = "neoforge"
+type = "required"
+versionRange = "[21.1,)"
+ordering = "NONE"
+side = "BOTH"
+
+[[dependencies.benchprobe]]
+modId = "minecraft"
+type = "required"
+versionRange = "[1.21.1]"
+ordering = "NONE"
+side = "BOTH"
+
+[[dependencies.benchprobe]]
+modId = "create"
+type = "required"
+versionRange = "[6.0.10,6.0.11)"
+ordering = "AFTER"
+side = "BOTH"

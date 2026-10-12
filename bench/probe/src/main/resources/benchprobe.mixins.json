@@ -1,0 +1,15 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "com.vws.benchprobe.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": [
+    "KineticTickCounterMixin",
+    "BeltTickCounterMixin",
+    "ContraptionPauseMixin",
+    "ActuatorPauseMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

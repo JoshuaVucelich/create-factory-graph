@@ -115,8 +115,8 @@ public final class FGConfig {
         b.pop();
 
         b.push("safety");
-        KILL_SWITCH = b.comment("Fail open. When true the graph, ship cadence, belt backoff, and every cache are inert. Create ticks as stock. In-memory debt is dropped and not replayed. /factorygraph kill does the same until restart.")
-                .define("killSwitch", false);
+        KILL_SWITCH = b.comment("Fail open. Default true: the graph, ship cadence, belt backoff, and every cache stay inert and Create ticks as stock. The headless pack bench (bench/results/comparison.md) did not show a stable MSPT win, and skipping a bearing or piston tick rubber-bands the client. Set this false only to opt in. In-memory debt is dropped and not replayed. /factorygraph kill does the same until restart.")
+                .define("killSwitch", true);
         MAX_CATCH_UP_PER_TICK = b.comment("Server-wide cap on extra decorative-relay ticks repaid in one server tick. Machines, belts, and contraptions are never repaid.")
                 .defineInRange("maxCatchUpPerTick", 64, 0, 100000);
         MAX_PARENTED_MEMBERS = b.comment("Kinetic networks larger than this are not parented to a ship. They tick at Create's rate. Stops a partial ship-group freeze from scanning a megabase every rebuild.")

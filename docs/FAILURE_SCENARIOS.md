@@ -2,6 +2,8 @@
 
 Hardening pass for the factory graph on Joshua's pack: NeoForge 21.1.233, Create 6.0.10, Sable 2.0.3, Aeronautics 1.3.0. The dev workspace still compiles against NeoForge 21.1.256 and Create 6.0.10-280. This jar does not link Sable or Aeronautics. The ship mod drives `FactoryCadence` by reflection. `displayTest` stays `IGNORE_ALL_VERSION`.
 
+`safety.killSwitch` defaults to true. A headless bench of this pack (`bench/results/comparison.md`) dropped 95% of kinetic ticks and did not move MSPT by more than run-to-run noise. Skipping a bearing or piston tick did desync the client. Leave the switch on, or take the jar off the server.
+
 The airship loss happened when ship-hull froze physics on part of a group. The graph used to parent a whole kinetic network from the first few members and then skip every parented block entity, including bearings and item handlers. A later catch-up ran those skipped ticks back to back. Either mistake can pull a contraption off a ship or move an item twice.
 
 `/factorygraph status` prints the kill switch, each cache, and the counters below. `/factorygraph kill` is the runtime switch. `safety.killSwitch` in `config/create_factory_graph-common.toml` is the same switch on the next launch.

@@ -2,6 +2,8 @@
 
 Server-side performance mod for Create on NeoForge 1.21.1. It keeps a graph of each kinetic network and uses that graph to skip tick work Create would otherwise do every tick.
 
+It ships inert. `safety.killSwitch` defaults to true. The headless bench below did not show a jitter-free MSPT gain on the Huge Josh Land pack, so that pack should not run this mod. Set the switch false only if you are measuring it yourself.
+
 Mod id `create_factory_graph`. License [CC0 1.0](LICENSE).
 
 One jar covers Create 6.0.5 through 6.0.10. The dependency range is `[6.0.5,6.0.11)`. The Gradle build compiles against Create 6.0.10.
@@ -106,7 +108,36 @@ Op level 2.
 - `caches.recipe` (true)
 - `caches.trainPosition` (true)
 - `caches.contraptionShapes` (true)
-- `safety.killSwitch` (false). `/factorygraph kill` does the same until restart and drops in-memory debt without replaying it
+- `safety.killSwitch` (true). The jar does nothing until this is false. `/factorygraph kill` does the same until restart and drops in-memory debt without replaying it
+
+## Pack benchmark
+
+`bench/run-bench.sh` runs a dedicated server on NeoForge 21.1.233, Create 6.0.10, Sable 2.0.3, and Aeronautics 1.3.0 bundled, with no Sodium. The world is 32 shaft lines of 48, four moving belts, one packed belt, four glued bearing contraptions, and four sticky pistons that are still extending. Numbers are in `bench/results/comparison.md`.
+
+Steady window, mean MSPT / p99 / tick stddev / kinetic block-entity ticks per server tick:
+
+| run | MSPT mean | p99 | stddev | kinetic ticks |
+| --- | ---: | ---: | ---: | ---: |
+| baseline (no mod) | 1.391 | 2.577 | 0.390 | 1727.7 |
+| mod (kill switch off) | 1.175 | 2.317 | 0.296 | 82.3 |
+| inert (kill switch on) | 1.419 | 2.918 | 0.507 | 1727.7 |
+| paused controllers | 1.446 | 4.022 | 0.536 | 1723.7 |
+
+The mod cut kinetic ticks by 95% (1,645 fewer per tick, 1,640 relays dormant) and the steady mean moved by 0.22 ms. Churn, where motors change RPM, was 1.306 ms vs 1.309 ms, and its p99 got worse (5.485 to 6.789). An earlier run of the same factory moved the steady mean by only 0.04 ms with the same tick cut. That 0.2 ms does not repeat, and it is smaller than the tick stddev. Relay ticks were never the cost.
+
+Contraption sync, same steady window. Bearings traveled 2870 degrees. Pistons traveled 18.69 blocks. Desync is the RMS gap between the server position and a client that keeps integrating speed. Jitter excess is the RMS of the second difference of that client point after subtracting the mean, so a smooth circle sits near 0.020.
+
+| run | bearing desync | bearing jitter excess | piston desync | piston travel |
+| --- | ---: | ---: | ---: | ---: |
+| baseline | 0.000 | 0.0198 | 0.000 | 18.69 |
+| mod | 0.000 | 0.0198 | 0.000 | 18.69 |
+| paused (skip every other controller tick) | 0.780 | 0.279 | 0.103 | 9.38 |
+
+Create 6.0.10 does not copy a bearing angle or a piston offset onto the client. The client integrates speed every tick and only bleeds the packet error (`clientAngleDiff /= 2`, `clientOffsetDiff *= 0.75`). Skipping those server ticks desyncs the two sides. This build does not skip them: the mod matches the baseline. The paused column is what rubber-banding looks like when something does.
+
+Belt item desync stayed at 0.012 on every run. Jam backoff skipped inventory ticks and did not pull items off the client.
+
+Drop this mod from the pack. Turning the kill switch off does not buy a measured, jitter-free gain, and any later change that skips bearing or piston ticks will rubber-band.
 - `safety.maxCatchUpPerTick` (64), `safety.maxParentedMembers` (8192)
 
 `/factorygraph status` reports the kill switch, each cache, and the fail-open counters. See `docs/FAILURE_SCENARIOS.md`.

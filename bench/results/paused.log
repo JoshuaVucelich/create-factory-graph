@@ -1,0 +1,169 @@
+[32m[16:56:48.672] [main/INFO] [Launcher/MODLAUNCHER]: ModLauncher running: args [--launchTarget, forgeserver, --fml.neoForgeVersion, 21.1.233, --fml.fmlVersion, 4.0.42, --fml.mcVersion, 1.21.1, --fml.neoFormVersion, 20240808.144430, nogui] 
+[m[32m[16:56:48.673] [main/INFO] [Launcher/MODLAUNCHER]: JVM identified as Ubuntu OpenJDK 64-Bit Server VM 21.0.12.1+1-1-24.04.4-Ubuntu 
+[m[32m[16:56:48.674] [main/INFO] [Launcher/MODLAUNCHER]: ModLauncher 11.0.5+main.901c6ea8 starting: java version 21.0.12.1 by Ubuntu; OS Linux arch amd64 version 6.12.94+ 
+[m[32m[16:56:48.736] [main/INFO] [loading.ImmediateWindowHandler/]: ImmediateWindowProvider not loading because launch target is forgeserver 
+[m[32m[16:56:48.764] [main/INFO] [mixin/]: SpongePowered MIXIN Subsystem Version=0.8.7 Source=union:/tmp/nf-server/libraries/net/fabricmc/sponge-mixin/0.15.2+mixin.0.8.7/sponge-mixin-0.15.2+mixin.0.8.7.jar%2373!/ Service=ModLauncher Env=SERVER 
+[m[32m[16:56:48.959] [main/INFO] [loading.moddiscovery.ModDiscoverer/SCAN]: Found mod file "server-1.21.1-20240808.144430-srg.jar" [locator: production server provider +net.neoforged:neoforge:21.1.233:server] 
+[m[32m[16:56:48.972] [main/INFO] [loading.moddiscovery.ModDiscoverer/SCAN]: Found mod file "neoforge-21.1.233-universal.jar" [locator: PathBasedLocator[name=neoforge, paths=[libraries/net/neoforged/neoforge/21.1.233/neoforge-21.1.233-universal.jar]], reader: mod manifest] 
+[m[32m[16:56:48.976] [main/INFO] [loading.moddiscovery.ModDiscoverer/SCAN]: Found mod file "benchprobe-1.0.0.jar" [locator: {mods folder locator at /tmp/nf-server/mods}, reader: mod manifest] 
+[m[32m[16:56:48.984] [main/INFO] [loading.moddiscovery.ModDiscoverer/SCAN]: Found mod file "create-1.21.1-6.0.10.jar" [locator: {mods folder locator at /tmp/nf-server/mods}, reader: mod manifest] 
+[m[32m[16:56:48.985] [main/INFO] [loading.moddiscovery.ModDiscoverer/SCAN]: Found mod file "create-aeronautics-bundled-1.21.1-1.3.0.jar" [locator: {mods folder locator at /tmp/nf-server/mods}, reader: mod manifest] 
+[m[32m[16:56:48.988] [main/INFO] [loading.moddiscovery.ModDiscoverer/SCAN]: Found mod file "sable-neoforge-1.21.1-2.0.3.jar" [locator: {mods folder locator at /tmp/nf-server/mods}, reader: mod manifest] 
+[m[32m[16:56:49.524] [main/INFO] [loading.moddiscovery.locators.JarInJarDependencyLocator/]: Found 13 dependencies adding them to mods collection 
+[m[32m[16:56:49.524] [main/INFO] [loading.moddiscovery.ModDiscoverer/SCAN]: Found gamelibrary file "mixinextras-neoforge-0.5.3.jar" [parent: neoforge-21.1.233-universal.jar, locator: jarinjar, reader: mod manifest] 
+[m[32m[16:56:49.524] [main/INFO] [loading.moddiscovery.ModDiscoverer/SCAN]: Found library file "molang-compiler-3.1.1.19.jar" [parent: veil-neoforge-1.21.1-4.1.4.jar, locator: jarinjar] 
+[m[32m[16:56:49.524] [main/INFO] [loading.moddiscovery.ModDiscoverer/SCAN]: Found mod file "dev.eriksonn.aeronautics.aeronautics-neoforge-1.21.1-1.3.0.jar" [parent: create-aeronautics-bundled-1.21.1-1.3.0.jar, locator: jarinjar, reader: mod manifest] 
+[m[32m[16:56:49.524] [main/INFO] [loading.moddiscovery.ModDiscoverer/SCAN]: Found gamelibrary file "Registrate-MC1.21-1.3.0+67.jar" [parent: create-1.21.1-6.0.10.jar, locator: jarinjar, reader: mod manifest] 
+[m[32m[16:56:49.525] [main/INFO] [loading.moddiscovery.ModDiscoverer/SCAN]: Found mod file "veil-neoforge-1.21.1-4.1.4.jar" [parent: sable-neoforge-1.21.1-2.0.3.jar, locator: jarinjar, reader: mod manifest] 
+[m[32m[16:56:49.525] [main/INFO] [loading.moddiscovery.ModDiscoverer/SCAN]: Found mod file "dev.simulated_team.simulated.simulated-neoforge-1.21.1-1.3.0.jar" [parent: create-aeronautics-bundled-1.21.1-1.3.0.jar, locator: jarinjar, reader: mod manifest] 
+[m[32m[16:56:49.525] [main/INFO] [loading.moddiscovery.ModDiscoverer/SCAN]: Found mod file "sable-companion-common-1.21.1-1.6.0.jar" [parent: sable-neoforge-1.21.1-2.0.3.jar, locator: jarinjar, reader: mod manifest] 
+[m[32m[16:56:49.525] [main/INFO] [loading.moddiscovery.ModDiscoverer/SCAN]: Found mod file "flywheel-neoforge-1.21.1-1.0.6.jar" [parent: create-1.21.1-6.0.10.jar, locator: jarinjar, reader: mod manifest] 
+[m[32m[16:56:49.525] [main/INFO] [loading.moddiscovery.ModDiscoverer/SCAN]: Found gamelibrary file "dev.ryanhcode.sable.sable-sable_rapier-1.21.1-2.0.3.jar" [parent: sable-neoforge-1.21.1-2.0.3.jar, locator: jarinjar, reader: mod manifest] 
+[m[32m[16:56:49.525] [main/INFO] [loading.moddiscovery.ModDiscoverer/SCAN]: Found library file "glsl-processor-0.2.3.jar" [parent: veil-neoforge-1.21.1-4.1.4.jar, locator: jarinjar] 
+[m[32m[16:56:49.525] [main/INFO] [loading.moddiscovery.ModDiscoverer/SCAN]: Found mod file "dev.ryanhcode.offroad.offroad-neoforge-1.21.1-1.3.0.jar" [parent: create-aeronautics-bundled-1.21.1-1.3.0.jar, locator: jarinjar, reader: mod manifest] 
+[m[32m[16:56:49.525] [main/INFO] [loading.moddiscovery.ModDiscoverer/SCAN]: Found mod file "ponder-neoforge-1.0.82+mc1.21.1.jar" [parent: create-1.21.1-6.0.10.jar, locator: jarinjar, reader: mod manifest] 
+[m[32m[16:56:49.525] [main/INFO] [loading.moddiscovery.ModDiscoverer/SCAN]: Found library file "net.neoforged.neoforge-coremods-21.1.233.jar" [parent: neoforge-21.1.233-universal.jar, locator: jarinjar, reader: mod manifest] 
+[m[32m[16:56:49.526] [main/INFO] [loading.moddiscovery.ModDiscoverer/]: 
+     Mod List:
+		Name Version (Mod Id)
+
+		Create 6.0.10 (create)
+		Create Aeronautics 1.3.0 (aeronautics)
+		Create Aeronautics 1.3.0 (aeronautics_bundled)
+		Create Offroad 1.3.0 (offroad)
+		Create Simulated 1.3.0 (simulated)
+		Factory Graph Bench Probe 1.0.0 (benchprobe)
+		Flywheel 1.0.6 (flywheel)
+		Minecraft 1.21.1 (minecraft)
+		NeoForge 21.1.233 (neoforge)
+		Ponder 1.0.82+mc1.21.1 (ponder)
+		Sable 2.0.3 (sable)
+		Sable Companion 1.6.0 (sablecompanion)
+		Veil 4.1.4 (veil) 
+[m[32m[16:56:49.886] [main/INFO] [mixin/]: Compatibility level set to JAVA_21 
+[m[32m[16:56:49.934] [main/INFO] [LaunchServiceHandler/MODLAUNCHER]: Launching target 'forgeserver' with arguments [nogui] 
+[m[33m[16:56:49.998] [main/WARN] [mixin/]: Reference map 'simulated.refmap.json' for simulated.mixins.json could not be read. If this is a development environment you can ignore this message 
+[m[33m[16:56:50.004] [main/WARN] [mixin/]: Reference map 'aeronautics.refmap.json' for aeronautics.mixins.json could not be read. If this is a development environment you can ignore this message 
+[m[33m[16:56:50.013] [main/WARN] [mixin/]: Reference map 'ponder.refmap.json' for ponder-common.mixins.json could not be read. If this is a development environment you can ignore this message 
+[m[32m[16:56:50.020] [main/INFO] [mixin.AbstractSableMixinPlugin/]: Using Vanilla renderer mixins 
+[m[32m[16:56:50.021] [main/INFO] [mixin.AbstractSableMixinPlugin/]: Using Vanilla renderer mixins 
+[m[33m[16:56:50.021] [main/WARN] [mixin/]: Reference map 'offroad.refmap.json' for offroad.mixins.json could not be read. If this is a development environment you can ignore this message 
+[m[33m[16:56:50.395] [main/WARN] [mixin/]: Error loading class: mezz/jei/library/plugins/vanilla/ingredients/ItemStackListFactory (java.lang.ClassNotFoundException: mezz.jei.library.plugins.vanilla.ingredients.ItemStackListFactory) 
+[m[1;31m[16:56:50.575] [main/ERROR] [common.asm.RuntimeDistCleaner/DISTXFORM]: Attempted to load class net/minecraft/client/multiplayer/ClientLevel for invalid dist DEDICATED_SERVER 
+[m[33m[16:56:50.576] [main/WARN] [mixin/]: Error loading class: net/minecraft/client/multiplayer/ClientLevel (java.lang.RuntimeException: Attempted to load class net/minecraft/client/multiplayer/ClientLevel for invalid dist DEDICATED_SERVER) 
+[m[1;31m[16:56:50.623] [main/ERROR] [common.asm.RuntimeDistCleaner/DISTXFORM]: Attempted to load class net/minecraft/client/multiplayer/ClientLevel for invalid dist DEDICATED_SERVER 
+[m[33m[16:56:50.623] [main/WARN] [mixin/]: Error loading class: net/minecraft/client/multiplayer/ClientLevel (java.lang.RuntimeException: Attempted to load class net/minecraft/client/multiplayer/ClientLevel for invalid dist DEDICATED_SERVER) 
+[m[1;31m[16:56:50.635] [main/ERROR] [common.asm.RuntimeDistCleaner/DISTXFORM]: Attempted to load class net/minecraft/client/multiplayer/ClientLevel for invalid dist DEDICATED_SERVER 
+[m[33m[16:56:50.636] [main/WARN] [mixin/]: Error loading class: net/minecraft/client/multiplayer/ClientLevel (java.lang.RuntimeException: Attempted to load class net/minecraft/client/multiplayer/ClientLevel for invalid dist DEDICATED_SERVER) 
+[m[33m[16:56:50.745] [main/WARN] [mixin/]: Error loading class: org/jetbrains/annotations/ApiStatus$ScheduledForRemoval (java.lang.ClassNotFoundException: org.jetbrains.annotations.ApiStatus$ScheduledForRemoval) 
+[m[1;31m[16:56:50.756] [main/ERROR] [common.asm.RuntimeDistCleaner/DISTXFORM]: Attempted to load class net/minecraft/client/multiplayer/ClientLevel for invalid dist DEDICATED_SERVER 
+[m[33m[16:56:50.757] [main/WARN] [mixin/]: Error loading class: net/minecraft/client/multiplayer/ClientLevel (java.lang.RuntimeException: Attempted to load class net/minecraft/client/multiplayer/ClientLevel for invalid dist DEDICATED_SERVER) 
+[m[1;31m[16:56:50.758] [main/ERROR] [common.asm.RuntimeDistCleaner/DISTXFORM]: Attempted to load class net/minecraft/client/multiplayer/ClientLevel for invalid dist DEDICATED_SERVER 
+[m[33m[16:56:50.758] [main/WARN] [mixin/]: Error loading class: net/minecraft/client/multiplayer/ClientLevel (java.lang.RuntimeException: Attempted to load class net/minecraft/client/multiplayer/ClientLevel for invalid dist DEDICATED_SERVER) 
+[m[1;31m[16:56:50.766] [main/ERROR] [common.asm.RuntimeDistCleaner/DISTXFORM]: Attempted to load class net/minecraft/client/multiplayer/ClientLevel for invalid dist DEDICATED_SERVER 
+[m[33m[16:56:50.766] [main/WARN] [mixin/]: Error loading class: net/minecraft/client/multiplayer/ClientLevel (java.lang.RuntimeException: Attempted to load class net/minecraft/client/multiplayer/ClientLevel for invalid dist DEDICATED_SERVER) 
+[m[1;31m[16:56:50.767] [main/ERROR] [common.asm.RuntimeDistCleaner/DISTXFORM]: Attempted to load class net/minecraft/client/multiplayer/ClientLevel for invalid dist DEDICATED_SERVER 
+[m[33m[16:56:50.768] [main/WARN] [mixin/]: Error loading class: net/minecraft/client/multiplayer/ClientLevel (java.lang.RuntimeException: Attempted to load class net/minecraft/client/multiplayer/ClientLevel for invalid dist DEDICATED_SERVER) 
+[m[1;31m[16:56:50.774] [main/ERROR] [common.asm.RuntimeDistCleaner/DISTXFORM]: Attempted to load class net/minecraft/client/multiplayer/ClientLevel for invalid dist DEDICATED_SERVER 
+[m[33m[16:56:50.774] [main/WARN] [mixin/]: Error loading class: net/minecraft/client/multiplayer/ClientLevel (java.lang.RuntimeException: Attempted to load class net/minecraft/client/multiplayer/ClientLevel for invalid dist DEDICATED_SERVER) 
+[m[1;31m[16:56:50.776] [main/ERROR] [common.asm.RuntimeDistCleaner/DISTXFORM]: Attempted to load class net/minecraft/client/multiplayer/ClientLevel for invalid dist DEDICATED_SERVER 
+[m[33m[16:56:50.776] [main/WARN] [mixin/]: Error loading class: net/minecraft/client/multiplayer/ClientLevel (java.lang.RuntimeException: Attempted to load class net/minecraft/client/multiplayer/ClientLevel for invalid dist DEDICATED_SERVER) 
+[mWARN StatusConsoleListener Advanced terminal features are not available in this environment
+[16:56:50] [main/INFO] [MixinExtras|Service/]: Initializing MixinExtras via com.llamalad7.mixinextras.service.MixinExtrasServiceImpl(version=0.5.3).
+[16:56:51] [main/ERROR] [ne.ne.fm.co.as.RuntimeDistCleaner/DISTXFORM]: Attempted to load class net/minecraft/client/multiplayer/ClientLevel for invalid dist DEDICATED_SERVER
+[16:56:51] [main/WARN] [mixin/]: Error loading class: net/minecraft/client/multiplayer/ClientLevel (java.lang.RuntimeException: Attempted to load class net/minecraft/client/multiplayer/ClientLevel for invalid dist DEDICATED_SERVER)
+[16:56:51] [main/ERROR] [ne.ne.fm.co.as.RuntimeDistCleaner/DISTXFORM]: Attempted to load class net/minecraft/client/multiplayer/ClientLevel for invalid dist DEDICATED_SERVER
+[16:56:51] [main/WARN] [mixin/]: Error loading class: net/minecraft/client/multiplayer/ClientLevel (java.lang.RuntimeException: Attempted to load class net/minecraft/client/multiplayer/ClientLevel for invalid dist DEDICATED_SERVER)
+[16:56:51] [main/ERROR] [ne.ne.fm.co.as.RuntimeDistCleaner/DISTXFORM]: Attempted to load class net/minecraft/client/multiplayer/ClientLevel for invalid dist DEDICATED_SERVER
+[16:56:51] [main/WARN] [mixin/]: Error loading class: net/minecraft/client/multiplayer/ClientLevel (java.lang.RuntimeException: Attempted to load class net/minecraft/client/multiplayer/ClientLevel for invalid dist DEDICATED_SERVER)
+[16:56:54] [modloading-worker-0/INFO] [Veil/]: Veil is initializing.
+[16:56:54] [modloading-worker-0/INFO] [co.si.cr.Create/]: Create 6.0.10 initializing! Commit hash: ac0c444d9828da3453ae8cc65338e8de063286fb
+[16:56:54] [modloading-worker-0/INFO] [ne.ne.ne.co.NeoForgeMod/NEOFORGE-MOD]: NeoForge mod loading, version 21.1.233, for MC 1.21.1
+[16:56:55] [modloading-worker-0/INFO] [de.ry.sa.Sable/]: Sable loaded!
+[16:56:57] [main/INFO] [mojang/YggdrasilAuthenticationService]: Environment: Environment[sessionHost=https://sessionserver.mojang.com, servicesHost=https://api.minecraftservices.com, name=PROD]
+[16:56:57] [NeoForge Version Check/INFO] [ne.ne.fm.VersionChecker/]: [create] Starting version check at https://api.modrinth.com/updates/create/forge_updates.json?neoforge=only
+[16:56:57] [main/WARN] [minecraft/VanillaPackResourcesBuilder]: Assets URL 'union:/tmp/nf-server/libraries/net/minecraft/server/1.21.1-20240808.144430/server-1.21.1-20240808.144430-srg.jar%23121!/assets/.mcassetsroot' uses unexpected schema
+[16:56:57] [main/WARN] [minecraft/VanillaPackResourcesBuilder]: Assets URL 'union:/tmp/nf-server/libraries/net/minecraft/server/1.21.1-20240808.144430/server-1.21.1-20240808.144430-srg.jar%23121!/data/.mcassetsroot' uses unexpected schema
+[16:56:57] [main/INFO] [co.si.cr.Create/]: Created 157 recipes which will be injected into the game
+[16:56:57] [main/INFO] [co.si.cr.Create/]: Created 0 tags which will be injected into the game
+[16:56:57] [main/INFO] [minecraft/MinecraftServer]: Found new data pack create:dynamic_data, loading it automatically
+[16:56:57] [NeoForge Version Check/INFO] [ne.ne.fm.VersionChecker/]: [create] Found status: OUTDATED Current: 6.0.10 Target: 6.0.10+mc1.21.1
+[16:56:57] [main/INFO] [minecraft/Main]: No existing world data, creating new world
+[16:56:58] [main/INFO] [minecraft/RecipeManager]: Loaded 2941 recipes
+[16:56:58] [main/INFO] [minecraft/AdvancementTree]: Loaded 2644 advancements
+[16:56:59] [Server thread/INFO] [minecraft/DedicatedServer]: Starting minecraft server version 1.21.1
+[16:56:59] [Server thread/INFO] [minecraft/DedicatedServer]: Loading properties
+[16:56:59] [Server thread/INFO] [minecraft/DedicatedServer]: Default game type: SURVIVAL
+[16:56:59] [Server thread/INFO] [minecraft/MinecraftServer]: Generating keypair
+[16:56:59] [Server thread/INFO] [minecraft/DedicatedServer]: Starting Minecraft server on *:25565
+[16:56:59] [Server thread/INFO] [de.ry.sa.Sable/]: Adding UDP server channel future
+[16:56:59] [Netty Epoll Server IO #0/INFO] [de.ry.sa.Sable/]: Server UDP channel active
+[16:56:59] [Server thread/INFO] [minecraft/ServerConnectionListener]: Using epoll channel type
+[16:56:59] [Server thread/WARN] [minecraft/DedicatedServer]: **** SERVER IS RUNNING IN OFFLINE/INSECURE MODE!
+[16:56:59] [Server thread/WARN] [minecraft/DedicatedServer]: The server will make no attempt to authenticate usernames. Beware.
+[16:56:59] [Server thread/WARN] [minecraft/DedicatedServer]: While this makes the game possible to play without internet access, it also opens up the ability for hackers to connect with any username they choose.
+[16:56:59] [Server thread/WARN] [minecraft/DedicatedServer]: To change this, set "online-mode" to "true" in the server.properties file.
+[16:56:59] [Server thread/INFO] [minecraft/DedicatedServer]: Preparing level "world"
+[16:56:59] [Server thread/INFO] [de.ry.sa.Sable/]: Creating physics pipeline for ResourceKey[minecraft:dimension / minecraft:overworld] using RapierPhysicsPipelineProvider
+[2026-10-12T16:56:59.502821260Z] [[32mINFO[0m] (sable_rapier) Rapier scene initialized
+[16:56:59] [Server thread/INFO] [de.ry.sa.Sable/]: Creating physics pipeline for ResourceKey[minecraft:dimension / minecraft:the_nether] using RapierPhysicsPipelineProvider
+[2026-10-12T16:56:59.788102999Z] [[32mINFO[0m] (sable_rapier) Rapier scene initialized
+[16:56:59] [Server thread/INFO] [de.ry.sa.Sable/]: Creating physics pipeline for ResourceKey[minecraft:dimension / minecraft:the_end] using RapierPhysicsPipelineProvider
+[2026-10-12T16:56:59.803225812Z] [[32mINFO[0m] (sable_rapier) Rapier scene initialized
+[16:56:59] [Server thread/INFO] [minecraft/MinecraftServer]: Preparing start region for dimension minecraft:overworld
+[16:56:59] [Worker-Main-3/INFO] [minecraft/LoggerChunkProgressListener]: Preparing spawn area: 2%
+[16:56:59] [Server thread/INFO] [minecraft/LoggerChunkProgressListener]: Time elapsed: 128 ms
+[16:56:59] [Server thread/INFO] [minecraft/DedicatedServer]: Done (0.639s)! For help, type "help"
+[16:56:59] [Server thread/INFO] [ne.ne.ne.se.pe.PermissionAPI/]: Successfully initialized permission handler neoforge:default_handler
+[16:57:00] [Server thread/INFO] [co.vw.be.FactoryWorld/]: benchprobe surface y=-60 placing factory at -59
+[16:57:00] [Server thread/INFO] [co.vw.be.FactoryWorld/]: benchprobe placed relays=1565 machines=28 motors=45
+[16:57:02] [Server thread/WARN] [co.vw.be.FactoryWorld/]: piston assemble threw at BlockPos{x=48, y=5, z=148}: com.simibubi.create.content.contraptions.AssemblyException
+[16:57:02] [Server thread/WARN] [co.vw.be.FactoryWorld/]: piston assemble threw at BlockPos{x=52, y=5, z=148}: com.simibubi.create.content.contraptions.AssemblyException
+[16:57:02] [Server thread/WARN] [co.vw.be.FactoryWorld/]: piston assemble threw at BlockPos{x=56, y=5, z=148}: com.simibubi.create.content.contraptions.AssemblyException
+[16:57:02] [Server thread/WARN] [co.vw.be.FactoryWorld/]: piston assemble threw at BlockPos{x=60, y=5, z=148}: com.simibubi.create.content.contraptions.AssemblyException
+[16:57:02] [Server thread/INFO] [co.vw.be.FactoryWorld/]: belt BlockPos{x=8, y=-59, z=116} length 16 speed 32.0 items 4
+[16:57:02] [Server thread/INFO] [co.vw.be.FactoryWorld/]: belt BlockPos{x=14, y=-59, z=116} length 16 speed 32.0 items 4
+[16:57:02] [Server thread/INFO] [co.vw.be.FactoryWorld/]: belt BlockPos{x=20, y=-59, z=116} length 16 speed 32.0 items 4
+[16:57:02] [Server thread/INFO] [co.vw.be.FactoryWorld/]: belt BlockPos{x=26, y=-59, z=116} length 16 speed 32.0 items 4
+[16:57:02] [Server thread/INFO] [co.vw.be.FactoryWorld/]: belt BlockPos{x=40, y=-59, z=116} length 16 speed 32.0 items 15
+[16:57:02] [Server thread/INFO] [co.vw.be.FactoryWorld/]: benchprobe assembled bearings 4/4 pistons 4/4 beltsWithItems 5
+[16:57:06] [Server thread/INFO] [co.vw.be.BenchProbe/]: benchprobe world relays=1565 machines=28 bearingsRunning=4/4 pistonsRunning=4/4 beltsWithItems=5 lineMotorsWithSpeed=40/40
+[16:57:10] [Server thread/INFO] [co.vw.be.BenchProbe/]: benchprobe window steady (300 ticks)
+[16:57:10] [Server thread/INFO] [co.vw.be.BenchProbe/]: benchprobe piston BlockPos{x=48, y=5, z=148} offset 6.1875 running true
+[16:57:10] [Server thread/INFO] [co.vw.be.BenchProbe/]: benchprobe piston BlockPos{x=52, y=5, z=148} offset 6.1875 running true
+[16:57:10] [Server thread/INFO] [co.vw.be.BenchProbe/]: benchprobe piston BlockPos{x=56, y=5, z=148} offset 6.1875 running true
+[16:57:10] [Server thread/INFO] [co.vw.be.BenchProbe/]: benchprobe piston BlockPos{x=60, y=5, z=148} offset 6.1875 running true
+[16:57:10] [Server thread/INFO] [co.vw.be.BenchProbe/]: benchprobe steady tracking bearings=4 pistons=4 belts=5
+[16:57:25] [Server thread/INFO] [co.vw.be.BenchProbe/]: benchprobe window churn (120 ticks)
+[16:57:25] [Server thread/INFO] [co.vw.be.BenchProbe/]: benchprobe piston BlockPos{x=48, y=5, z=148} offset 15.625 running true
+[16:57:25] [Server thread/INFO] [co.vw.be.BenchProbe/]: benchprobe piston BlockPos{x=52, y=5, z=148} offset 15.625 running true
+[16:57:25] [Server thread/INFO] [co.vw.be.BenchProbe/]: benchprobe piston BlockPos{x=56, y=5, z=148} offset 15.625 running true
+[16:57:25] [Server thread/INFO] [co.vw.be.BenchProbe/]: benchprobe piston BlockPos{x=60, y=5, z=148} offset 15.625 running true
+[16:57:25] [Server thread/INFO] [co.vw.be.BenchProbe/]: benchprobe churn tracking bearings=4 pistons=4 belts=5
+[16:57:31] [Server thread/INFO] [co.vw.be.BenchProbe/]: benchprobe window steady2 (150 ticks)
+[16:57:31] [Server thread/INFO] [co.vw.be.BenchProbe/]: benchprobe piston BlockPos{x=48, y=5, z=148} offset 19.375 running true
+[16:57:31] [Server thread/INFO] [co.vw.be.BenchProbe/]: benchprobe piston BlockPos{x=52, y=5, z=148} offset 19.375 running true
+[16:57:31] [Server thread/INFO] [co.vw.be.BenchProbe/]: benchprobe piston BlockPos{x=56, y=5, z=148} offset 19.375 running true
+[16:57:31] [Server thread/INFO] [co.vw.be.BenchProbe/]: benchprobe piston BlockPos{x=60, y=5, z=148} offset 19.375 running true
+[16:57:31] [Server thread/INFO] [co.vw.be.BenchProbe/]: benchprobe steady2 tracking bearings=4 pistons=4 belts=5
+[16:57:38] [Server thread/INFO] [co.vw.be.BenchProbe/]: benchprobe cadence skipped (factory graph not loaded)
+[16:57:38] [Server thread/INFO] [co.vw.be.BenchProbe/]: benchprobe window cadence (150 ticks)
+[16:57:38] [Server thread/INFO] [co.vw.be.BenchProbe/]: benchprobe piston BlockPos{x=48, y=5, z=148} offset 24.125 running true
+[16:57:38] [Server thread/INFO] [co.vw.be.BenchProbe/]: benchprobe piston BlockPos{x=52, y=5, z=148} offset 24.125 running true
+[16:57:38] [Server thread/INFO] [co.vw.be.BenchProbe/]: benchprobe piston BlockPos{x=56, y=5, z=148} offset 24.125 running true
+[16:57:38] [Server thread/INFO] [co.vw.be.BenchProbe/]: benchprobe piston BlockPos{x=60, y=5, z=148} offset 24.125 running true
+[16:57:38] [Server thread/INFO] [co.vw.be.BenchProbe/]: benchprobe cadence tracking bearings=4 pistons=4 belts=5
+[16:57:46] [Server thread/INFO] [co.vw.be.BenchProbe/]: BENCHPROBE_DONE /workspace/bench/results/paused.json
+[16:57:46] [Server thread/INFO] [minecraft/MinecraftServer]: Stopping server
+[16:57:46] [Server thread/INFO] [minecraft/MinecraftServer]: Saving players
+[16:57:46] [Server thread/INFO] [minecraft/MinecraftServer]: Saving worlds
+[16:57:46] [Server thread/INFO] [minecraft/MinecraftServer]: Saving chunks for level 'ServerLevel[world]'/minecraft:overworld
+[16:57:46] [Server thread/INFO] [de.ry.sa.Sable/]: Saving sub-levels for level 'ServerLevel[world]'/minecraft:overworld
+[16:57:46] [Server thread/INFO] [minecraft/MinecraftServer]: Saving chunks for level 'ServerLevel[world]'/minecraft:the_nether
+[16:57:46] [Server thread/INFO] [de.ry.sa.Sable/]: Saving sub-levels for level 'ServerLevel[world]'/minecraft:the_nether
+[16:57:46] [Server thread/INFO] [minecraft/MinecraftServer]: Saving chunks for level 'ServerLevel[world]'/minecraft:the_end
+[16:57:46] [Server thread/INFO] [de.ry.sa.Sable/]: Saving sub-levels for level 'ServerLevel[world]'/minecraft:the_end
+[16:57:46] [Server thread/INFO] [minecraft/MinecraftServer]: ThreadedAnvilChunkStorage (world): All chunks are saved
+[16:57:46] [Server thread/INFO] [minecraft/MinecraftServer]: ThreadedAnvilChunkStorage (DIM-1): All chunks are saved
+[16:57:46] [Server thread/INFO] [minecraft/MinecraftServer]: ThreadedAnvilChunkStorage (DIM1): All chunks are saved
+[16:57:46] [Server thread/INFO] [minecraft/MinecraftServer]: ThreadedAnvilChunkStorage: All dimensions are saved

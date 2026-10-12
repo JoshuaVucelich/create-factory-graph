@@ -7,7 +7,7 @@ modId="${mod_id}"
 version="${mod_version}"
 displayName="${mod_name}"
 authors="${mod_authors}"
-description='''Server-side Create kinetic factory graph. Ship cadence defers decorative relays only; belts, deployers, and contraptions are not throttled and their debt is never replayed. safety.killSwitch and /factorygraph kill fail open. Mixin config is optional so a Create mismatch does not crash the server. Targets NeoForge 21.1.233, Create 6.0.10, Sable 2.0.3, Aeronautics 1.3.0.'''
+description='''Server-side Create kinetic factory graph. Ships inert (safety.killSwitch defaults true): the pack bench showed no stable MSPT gain, and a skipped bearing or piston tick rubber-bands the client. Opt in by setting the switch false. Ship cadence defers decorative relays only; belts, deployers, and contraptions are not throttled and their debt is never replayed. /factorygraph kill fails open. Mixin config is optional so a Create mismatch does not crash the server. Targets NeoForge 21.1.233, Create 6.0.10, Sable 2.0.3, Aeronautics 1.3.0.'''
 # Server-side only: vanilla/Create clients without this mod can join.
 displayTest="IGNORE_ALL_VERSION"
 

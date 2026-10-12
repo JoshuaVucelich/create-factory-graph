@@ -1,0 +1,14 @@
+{
+  "label": "inert",
+  "pack": {"neoforge": "21.1.233", "minecraft": "1.21.1", "create": "6.0.10", "sable": "2.0.3", "aeronautics": "1.3.0", "sodium": false},
+  "modLoaded": true,
+  "skipContraptionTicks": 0,
+  "world": "relays=1565 machines=28 bearingsRunning=4/4 pistonsRunning=4/4 beltsWithItems=5 lineMotorsWithSpeed=40/40",
+  "modStats": {"graphs": 0, "nodes": 0, "dormant": 0, "sleeps": 0, "wakes": 0, "rebuilds": 0, "skippedBeTicks": 0, "beltBackoffSkips": 0, "validations": 0, "parentedRebuilds": 0, "groundRebuilds": 0, "lastBuildNanosSum": 0, "failOpens": 0},
+  "windows": {
+    "steady": {"ticks": 300, "msptMean": 1.4188, "msptP99": 2.9185, "msptStddev": 0.5067, "kineticTicksPerTick": 1727.740, "beltTicksPerTick": 5.017, "bearings": {"actors": 4, "samples": 1200, "desyncRms": 0.000000, "jitterRms": 0.019805, "jitterExcessRms": 0.019804, "serverJitterRms": 0.019805, "stepStddev": 0.000003, "travel": 2870.4011}, "pistons": {"actors": 4, "samples": 1200, "desyncRms": 0.000000, "jitterRms": 0.000000, "jitterExcessRms": 0.000000, "serverJitterRms": 0.000000, "stepStddev": 0.000000, "travel": 18.6875}, "beltDesyncRms": 0.012040},
+    "churn": {"ticks": 120, "msptMean": 1.4299, "msptP99": 7.4704, "msptStddev": 1.6809, "kineticTicksPerTick": 1736.350, "beltTicksPerTick": 5.042, "bearings": {"actors": 4, "samples": 480, "desyncRms": 0.000000, "jitterRms": 0.019805, "jitterExcessRms": 0.019785, "serverJitterRms": 0.019805, "stepStddev": 0.000003, "travel": 1142.4004}, "pistons": {"actors": 4, "samples": 480, "desyncRms": 0.000000, "jitterRms": 0.000000, "jitterExcessRms": 0.000000, "serverJitterRms": 0.000000, "stepStddev": 0.000000, "travel": 7.4375}, "beltDesyncRms": 0.013665},
+    "steady2": {"ticks": 150, "msptMean": 1.0954, "msptP99": 2.6082, "msptStddev": 0.3277, "kineticTicksPerTick": 1733.480, "beltTicksPerTick": 5.033, "bearings": {"actors": 4, "samples": 600, "desyncRms": 0.000000, "jitterRms": 0.019805, "jitterExcessRms": 0.019803, "serverJitterRms": 0.019805, "stepStddev": 0.000003, "travel": 1430.4005}, "pistons": {"actors": 4, "samples": 600, "desyncRms": 0.000000, "jitterRms": 0.000000, "jitterExcessRms": 0.000000, "serverJitterRms": 0.000000, "stepStddev": 0.000000, "travel": 9.3125}, "beltDesyncRms": 0.012212},
+    "cadence": {"ticks": 150, "msptMean": 1.0820, "msptP99": 2.3265, "msptStddev": 0.3118, "kineticTicksPerTick": 1733.480, "beltTicksPerTick": 5.033, "bearings": {"actors": 4, "samples": 600, "desyncRms": 0.000000, "jitterRms": 0.019805, "jitterExcessRms": 0.019803, "serverJitterRms": 0.019805, "stepStddev": 0.000003, "travel": 1430.4005}, "pistons": {"actors": 4, "samples": 600, "desyncRms": 0.000000, "jitterRms": 0.000000, "jitterExcessRms": 0.000000, "serverJitterRms": 0.000000, "stepStddev": 0.000000, "travel": 9.3125}, "beltDesyncRms": 0.012212}
+  }
+}
