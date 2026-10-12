@@ -138,6 +138,8 @@ Create 6.0.10 does not copy a bearing angle or a piston offset onto the client. 
 Belt item desync stayed at 0.012 on every run. Jam backoff skipped inventory ticks and did not pull items off the client.
 
 Drop this mod from the pack. Turning the kill switch off does not buy a measured, jitter-free gain, and any later change that skips bearing or piston ticks will rubber-band.
+
+Issue: `docs/issues/007-pack-bench.md`.
 - `safety.maxCatchUpPerTick` (64), `safety.maxParentedMembers` (8192)
 
 `/factorygraph status` reports the kill switch, each cache, and the fail-open counters. See `docs/FAILURE_SCENARIOS.md`.
