@@ -274,8 +274,12 @@ public class BenchProbe {
         final long[] nanos;
         final long kineticAtStart;
         final long beltAtStart;
+        final long[] sectionNanos0;
+        final long[] sectionCalls0;
         long kineticEnd;
         long beltEnd;
+        long[] sectionNanos1;
+        long[] sectionCalls1;
         final List<BearingTrace> bearings = new ArrayList<>();
         final List<PistonTrace> pistons = new ArrayList<>();
         final List<BeltTrace> belts = new ArrayList<>();
@@ -287,13 +291,24 @@ public class BenchProbe {
             this.nanos = new long[limit];
             this.kineticAtStart = TickCounters.kineticTicks;
             this.beltAtStart = TickCounters.beltTicks;
+            this.sectionNanos0 = Sections.nanos();
+            this.sectionCalls0 = Sections.calls();
             this.kineticEnd = kineticAtStart;
             this.beltEnd = beltAtStart;
+            this.sectionNanos1 = sectionNanos0;
+            this.sectionCalls1 = sectionCalls0;
         }
 
         void closeCounters() {
             kineticEnd = TickCounters.kineticTicks;
             beltEnd = TickCounters.beltTicks;
+            sectionNanos1 = Sections.nanos();
+            sectionCalls1 = Sections.calls();
+            LOGGER.info("benchprobe sections {} {}", name, sectionLine());
+        }
+
+        String sectionLine() {
+            return Sections.line(sectionNanos0, sectionCalls0, sectionNanos1, sectionCalls1, ticks);
         }
 
         void add(long nano, ServerLevel level, FactoryWorld world) {
@@ -349,8 +364,9 @@ public class BenchProbe {
             double kin = ticks == 0 ? 0 : (kineticEnd - kineticAtStart) / (double) ticks;
             double beltTicks = ticks == 0 ? 0 : (beltEnd - beltAtStart) / (double) ticks;
             return String.format(Locale.ROOT,
-                    "    \"%s\": {\"ticks\": %d, \"msptMean\": %.4f, \"msptP99\": %.4f, \"msptStddev\": %.4f, \"kineticTicksPerTick\": %.3f, \"beltTicksPerTick\": %.3f, \"bearings\": %s, \"pistons\": %s, \"beltDesyncRms\": %.6f}",
-                    name, ticks, tick.mean, tick.p99, tick.stddev, kin, beltTicks, scoreJson(bearing, bearings.size()), scoreJson(piston, pistons.size()), belt);
+                    "    \"%s\": {\"ticks\": %d, \"msptMean\": %.4f, \"msptP99\": %.4f, \"msptStddev\": %.4f, \"kineticTicksPerTick\": %.3f, \"beltTicksPerTick\": %.3f, \"bearings\": %s, \"pistons\": %s, \"beltDesyncRms\": %.6f, \"sections\": %s}",
+                    name, ticks, tick.mean, tick.p99, tick.stddev, kin, beltTicks, scoreJson(bearing, bearings.size()), scoreJson(piston, pistons.size()), belt,
+                    Sections.json(sectionNanos0, sectionCalls0, sectionNanos1, sectionCalls1, ticks));
         }
 
         private static String scoreJson(MotionMath.Score s, int actors) {

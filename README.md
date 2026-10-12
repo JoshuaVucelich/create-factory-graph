@@ -139,6 +139,8 @@ Belt item desync stayed at 0.012 on every run. Jam backoff skipped inventory tic
 
 Drop this mod from the pack. Turning the kill switch off does not buy a measured, jitter-free gain, and any later change that skips bearing or piston ticks will rubber-band.
 
+A follow-up timed the same world (`-Dbench.sections=true`). Block-entity ticking is 0.64 ms. The kinetic tick body is 0.17 ms for 1,728 calls. Belts, funnels, fans, deployers, presses, mixers, chutes, and contraption collision are each under 0.06 ms, and this world has no fluid network. Four uninstrumented repeats of the mod against baseline still include zero in the 95% interval for both the steady mean and the p99. Desync and jitter match. See `docs/issues/008-hotspots.md`.
+
 Issue: `docs/issues/007-pack-bench.md`.
 - `safety.maxCatchUpPerTick` (64), `safety.maxParentedMembers` (8192)
 
